@@ -14,6 +14,7 @@ library(tensorflow)
 library(tidyverse)
 library(factoextra)
 library(cluster)
+library(imager)
 ```
 
 ```{r}
@@ -24,6 +25,16 @@ myPy
 
 ```{r}
 tf$constant("Hello Tensorflow!")
+```
+
+```{r}
+get_time <- function(){
+  myTime <- Sys.time()
+  myTime <- gsub(":","_",myTime)
+  myTime <- gsub(" ","_",myTime)
+  myTime <- gsub("-","_",myTime)
+  return (myTime)
+  }
 ```
 
 ## Preparation for Clustering
@@ -56,7 +67,7 @@ model <- keras_model(inputs=model$input, outputs=output)
 
 ```{r}
 # Switch to toggle between a prototype flower-images and the actual images to be clustered
-flower_data <- FALSE
+flower_data <- TRUE
 if (flower_data){
   myPath <- "flowers"
   print("Flower Data loaded.")
@@ -84,12 +95,14 @@ for (img_file in myFiles){
   len <- length(myFeatures)
   myFeatures[[len+1]]<-feat
 }
+
+x <- matrix(unlist(myFeatures), ncol=4096, byrow=TRUE) 
 ```
 
 ## PCA
 
 ```{r}
-x <- array(unlist(myFeatures),dim=c(length(myFeatures),length(myFeatures[[1]])))
+# x <- array(unlist(myFeatures),dim=c(length(myFeatures),length(myFeatures[[1]])))
 dim(x)
 ```
 
@@ -109,7 +122,7 @@ file_features <- as.data.frame(pca_res$x)
 # append both dataframes to one (no join due to missing parameter)
 df_pca <- bind_cols(file_names,file_features)
 
-write_csv(df_pca,paste("pcaResults_",myPath,".csv",sep=""))
+write_csv(df_pca,paste(get_time(),"_","pcaResults_",myPath,".csv",sep=""))
 ```
 
 ```{r}
@@ -125,11 +138,10 @@ write_csv(df_pca,paste("pcaResults_",myPath,".csv",sep=""))
 fviz_nbclust(pca_res$x,kmeans,method="wss",k.max=10)
 ```
 
-
 ## Clustering
 
 ```{r}
-km <- kmeans(pca_res$x,centers=10,nstart=3,iter.max=100)
+km <- kmeans(pca_res$x,centers=10,nstart=3)
 ```
 
 ```{r}
@@ -140,10 +152,18 @@ clustered_files <- bind_cols(file_names,clusters)
 clustered_files
 
 # export clusters_dataframe to csv-file
-write_csv(clustered_files,paste("clustered_",myPath,".csv",sep=""))
+write_csv(clustered_files,paste(get_time(),"_","clustered_",myPath,".csv",sep=""))
 ```
 
 ```{r}
-clustered_files |> filter(cluster==2)
-```
+myPlotData <- clustered_files |>
+  filter(cluster==4) |>
+  select(myFiles)
+myPlotData <- sample(myPlotData$myFiles,4)
 
+for (i in myPlotData){
+  im <- load.image(paste(myPath,"/",i,sep=""))
+  plot(im)
+}
+
+```

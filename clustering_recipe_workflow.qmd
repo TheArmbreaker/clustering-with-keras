@@ -17,10 +17,11 @@ library(tidyclust)
 library(recipes)
 library(factoextra)
 library(cluster)
+library(imager)
 ```
 
 ```{r}
-#use_condaenv("condatascience")
+use_condaenv("condatascience") # On my Windows Machine
 myPy <- py_config()$python
 myPy
 ```
@@ -28,6 +29,7 @@ myPy
 ```{r}
 tf$constant("Hello Tensorflow!")
 ```
+
 ```{r}
 get_time <- function(){
   myTime <- Sys.time()
@@ -97,7 +99,8 @@ for (img_file in myFiles){
   myFeatures[[len+1]]<-feat
 }
 
-myFeatArray <- array(unlist(myFeatures),dim=c(length(myFeatures),length(myFeatures[[1]])))
+#myFeatArray <- array(unlist(myFeatures, recursive = TRUE),dim=c(length(myFeatures),length(myFeatures[[1]])))
+myFeatArray <- matrix(unlist(myFeatures), ncol=4096, byrow=TRUE) 
 ```
 
 ```{r}
@@ -116,7 +119,7 @@ df_data <- bind_cols(file_names,file_features)
 
 ```{r}
 img_recipe <- recipe(~.,data=myFeatArray) |>
-  step_pca(all_numeric(),num_comp=1)
+  step_pca(all_numeric(),num_comp=100)
 ```
 
 ```{r}
@@ -125,14 +128,34 @@ img_prep <- prep(img_recipe)
 
 ```{r}
 baked_rec <- bake(img_prep,myFeatArray)
-write_csv(baked_rec,paste(get_time(),"_","pcaResults_",myPath,".csv",sep=""))
+write_csv(baked_rec,paste(get_time(),"_","recipe_pcaResults_",myPath,".csv",sep=""))
 ```
 
 ```{r}
-km <- k_means(mode="partition", num_cluster=3, engine="stats")
+km <- k_means() |>
+  set_args(num_clusters=tune())
 ```
 
 ```{r}
+km_wf <- workflow(img_recipe,km)
+```
+
+```{r}
+boots <- bootstraps(df_data,times=25)
+
+tune_res <- tune_cluster(
+  km_wf,
+  resample = boots
+)
+```
+
+```{r}
+collect_metrics(tune_res)
+```
+
+```{r}
+km <- k_means() |>
+  set_args(num_clusters=9)
 km_wf <- workflow(img_recipe,km)
 ```
 
@@ -143,9 +166,18 @@ km_fit <- fit(km_wf,data=df_data)
 ```{r}
 df_clustered <- bind_cols(file_names,extract_cluster_assignment(km_fit))
 df_clustered
-write_csv(df_clustered,paste(get_time(),"_","clustered",myPath,".csv",sep=""))
+write_csv(df_clustered,paste(get_time(),"_","recipe_clustered",myPath,".csv",sep=""))
 ```
 
+```{r}
+myPlotData <- df_clustered |>
+  filter(.cluster=="Cluster_4") |>
+  select(myFiles)
+myPlotData <- sample(myPlotData$myFiles,5)
 
+for (i in myPlotData){
+  im <- load.image(paste(myPath,"/",i,sep=""))
+  plot(im)
+}
 
-
+```
