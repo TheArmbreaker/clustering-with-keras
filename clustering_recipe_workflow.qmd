@@ -28,6 +28,15 @@ myPy
 ```{r}
 tf$constant("Hello Tensorflow!")
 ```
+```{r}
+get_time <- function(){
+  myTime <- Sys.time()
+  myTime <- gsub(":","_",myTime)
+  myTime <- gsub(" ","_",myTime)
+  myTime <- gsub("-","_",myTime)
+  return (myTime)
+  }
+```
 
 ## Preparation for Clustering
 
@@ -56,7 +65,6 @@ model <- keras_model(inputs=model$input, outputs=output)
 ```
 
 ## Feature Extraction with Recipe
-
 
 ```{r}
 # Switch to toggle between a prototype flower-images and the actual images to be clustered
@@ -104,7 +112,6 @@ file_features <- as.data.frame(myFeatArray)
 df_data <- bind_cols(file_names,file_features)
 ```
 
-
 ## PCA
 
 ```{r}
@@ -118,13 +125,12 @@ img_prep <- prep(img_recipe)
 
 ```{r}
 baked_rec <- bake(img_prep,myFeatArray)
-write_csv(baked_rec,paste(Sys.time(),"_","pcaResults_",myPath,".csv",sep=""))
+write_csv(baked_rec,paste(get_time(),"_","pcaResults_",myPath,".csv",sep=""))
 ```
 
 ```{r}
 km <- k_means(mode="partition", num_cluster=3, engine="stats")
 ```
-
 
 ```{r}
 km_wf <- workflow(img_recipe,km)
@@ -137,5 +143,9 @@ km_fit <- fit(km_wf,data=df_data)
 ```{r}
 df_clustered <- bind_cols(file_names,extract_cluster_assignment(km_fit))
 df_clustered
-write_csv(df_clustered,paste(Sys.time(),"_","clustered",myPath,".csv",sep=""))
+write_csv(df_clustered,paste(get_time(),"_","clustered",myPath,".csv",sep=""))
 ```
+
+
+
+
