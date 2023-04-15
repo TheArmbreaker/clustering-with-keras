@@ -14,7 +14,7 @@ library(tensorflow)
 library(tidyverse)
 library(factoextra)
 library(cluster)
-library(imager)
+#library(imager)
 ```
 
 ```{r}
@@ -67,7 +67,7 @@ model <- keras_model(inputs=model$input, outputs=output)
 
 ```{r}
 # Switch to toggle between a prototype flower-images and the actual images to be clustered
-flower_data <- TRUE
+flower_data <- FALSE
 if (flower_data){
   myPath <- "flowers"
   print("Flower Data loaded.")
@@ -135,7 +135,7 @@ write_csv(df_pca,paste(get_time(),"_","pcaResults_",myPath,".csv",sep=""))
 ```
 
 ```{r}
-fviz_nbclust(pca_res$x,kmeans,method="wss",k.max=10)
+fviz_nbclust(pca_res$x,kmeans,method="wss",k.max=70)
 ```
 
 ## Clustering
@@ -156,10 +156,19 @@ write_csv(clustered_files,paste(get_time(),"_","clustered_",myPath,".csv",sep=""
 ```
 
 ```{r}
+# only load this after clustering run. Package conflict can occure.
+library(imager)
+```
+
+```{r}
+km$size
+```
+
+```{r}
 myPlotData <- clustered_files |>
-  filter(cluster==4) |>
+  filter(cluster==5) |>
   select(myFiles)
-myPlotData <- sample(myPlotData$myFiles,4)
+myPlotData <- sample(myPlotData$myFiles,5)
 
 for (i in myPlotData){
   im <- load.image(paste(myPath,"/",i,sep=""))

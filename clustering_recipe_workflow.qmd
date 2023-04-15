@@ -17,7 +17,6 @@ library(tidyclust)
 library(recipes)
 library(factoextra)
 library(cluster)
-library(imager)
 ```
 
 ```{r}
@@ -70,7 +69,7 @@ model <- keras_model(inputs=model$input, outputs=output)
 
 ```{r}
 # Switch to toggle between a prototype flower-images and the actual images to be clustered
-flower_data <- TRUE
+flower_data <- FALSE
 if (flower_data){
   myPath <- "flowers"
   print("Flower Data loaded.")
@@ -141,7 +140,7 @@ km_wf <- workflow(img_recipe,km)
 ```
 
 ```{r}
-boots <- bootstraps(df_data,times=25)
+boots <- bootstraps(df_data,times=1)
 
 tune_res <- tune_cluster(
   km_wf,
@@ -155,7 +154,7 @@ collect_metrics(tune_res)
 
 ```{r}
 km <- k_means() |>
-  set_args(num_clusters=9)
+  set_args(num_clusters=10)
 km_wf <- workflow(img_recipe,km)
 ```
 
@@ -170,8 +169,13 @@ write_csv(df_clustered,paste(get_time(),"_","recipe_clustered",myPath,".csv",sep
 ```
 
 ```{r}
+library(imager)
+```
+
+
+```{r}
 myPlotData <- df_clustered |>
-  filter(.cluster=="Cluster_4") |>
+  filter(.cluster=="Cluster_10") |>
   select(myFiles)
 myPlotData <- sample(myPlotData$myFiles,5)
 
