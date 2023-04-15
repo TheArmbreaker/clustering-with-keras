@@ -1,0 +1,149 @@
+---
+title: "clustering"
+format: html
+editor: visual
+---
+
+## Environment Preparation
+
+```{r}
+#| output: false
+library(reticulate)
+library(keras)
+library(tensorflow)
+library(tidyverse)
+library(factoextra)
+library(cluster)
+```
+
+```{r}
+use_condaenv("condatascience")
+myPy <- py_config()$python
+myPy
+```
+
+```{r}
+tf$constant("Hello Tensorflow!")
+```
+
+## Preparation for Clustering
+
+```{r}
+get_features <- function(image_file,myModel){
+  # takes: image file and model
+  # returns: feature vector for the provided image
+  # description:
+  # the image is loaded with color and scaled to 224x224 px.
+  # In the next step the image is converted to an array and this array is prepared for prediction on the provided model
+  img <- image_load(image_file, grayscale=FALSE,target_size = c(224,224))
+  img_array <- image_to_array(img)
+  reshaped_image_array <- array_reshape(img_array,c(1,dim(img_array)))
+  prepro_img <- imagenet_preprocess_input(reshaped_image_array)
+  features <- myModel |> predict(prepro_img)
+  return(features)
+}
+```
+
+```{r}
+# Load model
+model <- application_vgg16(weights="imagenet",include_top=TRUE)
+# Change Output to second last layer to access the feature map instead of classification result.
+output <- model$layers[[length(model$layers)-1]]$output
+model <- keras_model(inputs=model$input, outputs=output)
+```
+
+## Feature Extraction
+
+```{r}
+# Switch to toggle between a prototype flower-images and the actual images to be clustered
+flower_data <- FALSE
+if (flower_data){
+  myPath <- "flowers"
+  print("Flower Data loaded.")
+} else {
+  myPath <- "weapons"
+  print("Weapon Data loaded.")
+}
+# Actual loading of files to a list
+myFiles <- list.files(myPath)
+```
+
+```{r}
+#| output: false
+#| eval: false
+#| include: false
+# empty list to hold extracted features per image
+myFeatures <- list()
+
+# fill list with features by looping through file list and calling the function get_features
+for (img_file in myFiles){
+  # create path and call function
+  path <- paste(myPath,"/",img_file,sep="")
+  feat <- get_features(path,model)
+  # append List with features
+  len <- length(myFeatures)
+  myFeatures[[len+1]]<-feat
+}
+```
+
+## PCA
+
+```{r}
+x <- array(unlist(myFeatures),dim=c(length(myFeatures),length(myFeatures[[1]])))
+dim(x)
+```
+
+```{r}
+pca_res <- prcomp(x,rank=100)
+pca_res$x <- -1*pca_res$x
+```
+
+```{r}
+# transform myFiles list to a single column dataframe
+file_names <- as.data.frame(myFiles)
+  
+# create a dataframe with pcomp per row
+# file_features <- myFeatures |> map(as_tibble) |> reduce(bind_rows)
+file_features <- as.data.frame(pca_res$x)
+
+# append both dataframes to one (no join due to missing parameter)
+df_pca <- bind_cols(file_names,file_features)
+
+write_csv(df_pca,paste("pcaResults_",myPath,".csv",sep=""))
+```
+
+```{r}
+#| include: false
+#pca_res <- prcomp(df_features[,2:length(df_features)],rank=100)
+#pca_res$x <- -1*pca_res$x
+#pca_res$x
+
+#write_csv(clustered_files,paste("pcaResults_",myPath,".csv",sep=""))
+```
+
+```{r}
+fviz_nbclust(pca_res$x,kmeans,method="wss",k.max=10)
+```
+
+
+## Clustering
+
+```{r}
+km <- kmeans(pca_res$x,centers=10,nstart=3,iter.max=100)
+```
+
+```{r}
+# map cluster and file_name
+clusters <- as.data.frame(km[[1]])
+names(clusters) <- "cluster"
+clustered_files <- bind_cols(file_names,clusters)
+clustered_files
+
+# export clusters_dataframe to csv-file
+write_csv(clustered_files,paste("clustered_",myPath,".csv",sep=""))
+```
+
+```{r}
+clustered_files |> filter(cluster==2)
+```
+
