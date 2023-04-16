@@ -38,9 +38,12 @@ ui <- fluidPage(theme = shinytheme("united"),
                            ), # sidebarPanel
                            mainPanel(
                              h1("Header 1"),
+                             fileInput("file1","Upload Image",
+                                       multiple=FALSE,
+                                       accept=c(".jpg")),
                              
                              h4("Output 1"),
-                             #verbatimTextOutput("txtout"),
+                             imageOutput("myImage"),
                              
                            ) # mainPanel
                            
@@ -156,10 +159,11 @@ server <- function(input, output, session) {
     }
   )
   
+
   output$myImage <- renderImage(
     {
-      filename <- file.path("weapons/0a1cfb1bb8e135c2.jpg")
-      list(src = filename,
+      req(input$file1)
+      list(src = input$file1$datapath,
            alt = "Here should be an image.",
            width = 240,
            height = 180)
