@@ -15,8 +15,14 @@ library(shiny)
 library(shinythemes)
 library(tidyverse)
 
+# Get Data
 df_clusters <- read.csv("2023_04_16_00_32_52_recipe_clusteredweapons.csv",header=TRUE)
-df_img <- data.frame(id = c(1:3), img_path = c("weapons/f7f68f95ed8ab879.jpg", "weapons/0a91369dacf3b60c.jpg", "weapons/0c9d371c13cd16f1.jpg"))
+# Get Clusters for DropDown Selection
+cluster_vector <- df_clusters |> select(.cluster)
+
+df_img_files <- df_clusters |> filter(.cluster==cluster_vector[[1]][1]) |> select(myFiles)
+df_img_sample <- sample(df_img_files$myFiles,3)
+df_img <- data.frame(id = c(1:3), img_path = df_img_sample)
 
 # Define UI
 ui <- fluidPage(theme = shinytheme("united"),
@@ -45,7 +51,7 @@ ui <- fluidPage(theme = shinytheme("united"),
                              h1("Cluster of Weapon Images"),
                              
                              h3("Amount of Image by Cluster"),
-                             #tableOutput("futureData"),
+                             tableOutput("futureData"),
                              plotOutput(outputId = "ggplot_cluster"),
                              
                              h3("Display Images from Cluster"),
@@ -55,6 +61,10 @@ ui <- fluidPage(theme = shinytheme("united"),
                                
                             # ),
                              h4("Multiple Images in DIV container"),
+                            selectInput("clus",
+                                        "Cluster:",
+                                        cluster_vector,
+                                        selected = 1),
                              uiOutput("myImage5")
                            ) # mainPanel
                   ),
@@ -62,15 +72,15 @@ ui <- fluidPage(theme = shinytheme("united"),
                   
                 ), # navbarPage
                 # Add a CSS block to adjust the margins of the main panel
-                tags$head(
-                  tags$style(
-                    HTML("body {
-                          margin: 0 auto;
-                          align-items: center;
-                          max-width: 800px; /* Adjust this value to your desired width */
-                    }")
-                  )
-                )
+                #tags$head(
+                #  tags$style(
+                #    HTML("body {
+                #          margin: 0 auto;
+                #          align-items: center;
+                #          max-width: 800px; /* Adjust this value to your desired width */
+                #    }")
+                #  )
+                # )
 ) # fluidPage
 
 
@@ -84,7 +94,7 @@ server <- function(input, output) {
   output$futureData <- renderTable(
     {
       df_clusters |> count(.cluster) |>
-        arrange(as.numeric(sub(".*_", "", .cluster)))
+        filter(.cluster==input$clus)
     }
   )
   
@@ -133,25 +143,25 @@ server <- function(input, output) {
         print(imagename)
         output[[imagename]] <-
           renderImage({
-            list(src = file.path(df_img$img_path[my_i]), 
+            list(src = file.path("weapons",df_img$img_path[my_i]), 
                  width = "240", height = "180",
                  alt = "Image failed to render")
           }, deleteFile = FALSE)
       })
     }
   })
-  
+
   output$myImage5 <- renderUI({
     img_output_list <- 
       lapply(1:n,
              function(i){
-               #imagename= paste0("img",i)
+               imagename= paste0(i)
                #imageOutput(i)
-               div(style = "display:inline-block;margin-bottom:-12em", imageOutput(i))
+               div(style = "display:inline-block;margin-bottom:-12em", imageOutput(imagename))
              })
     do.call(tagList,img_output_list)
   })
-  
+
 } # server
 
 
