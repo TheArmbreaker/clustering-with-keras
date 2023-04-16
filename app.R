@@ -11,14 +11,21 @@
 # https://shiny.rstudio.com/articles/reactivity-overview.html
 
 # Load R packages
-library(shiny)
-library(shinythemes)
-library(tidyverse)
+#library(shiny)
+#library(shinythemes)
+#library(tidyverse)
+#library(keras)
+lapply(c("shiny", "shinythemes", "tidyverse", "keras"), require, character.only = TRUE)
 
 # Get Data
 df_clusters <- read.csv("2023_04_16_00_32_52_recipe_clusteredweapons.csv",header=TRUE)
 # Get Clusters for DropDown Selection
 cluster_vector <- df_clusters |> select(.cluster)
+
+myKerasModel <- application_vgg16(weights="imagenet",include_top=TRUE)
+# Change Output to second last layer to access the feature map instead of classification result.
+output <- myKerasModel$layers[[length(myKerasModel$layers)-1]]$output
+myKerasModel <- keras_model(inputs=myKerasModel$input, outputs=output)
 
 # df_img_files <- df_clusters |> filter(.cluster==cluster_vector[[1]][1]) |> select(myFiles)
 # df_img_sample <- sample(df_img_files$myFiles,4)
@@ -29,22 +36,20 @@ ui <- fluidPage(theme = shinytheme("united"),
                 navbarPage(
                   # theme = "cerulean",  # <--- To use a theme, uncomment this
                   "Image Clustering",
-                  tabPanel("Cluster New Image",
-                           sidebarPanel(
-                             tags$h3("Input:"),
-                             textInput("txt1", "Given Name:", ""),
-                             textInput("txt2", "Surname:", ""),
-                             
-                           ), # sidebarPanel
+                  tabPanel("Cluster New Image", id="image_cluster",
                            mainPanel(
-                             h1("Header 1"),
-                             fileInput("file1","Upload Image",
+                             h1("Which cluster does your Image belong to?"),
+                             h3("Upload an Image"),
+                             fileInput("file1","",
                                        multiple=FALSE,
                                        accept=c(".jpg")),
                              
-                             h4("Output 1"),
+                             h3("Your Image"),
                              imageOutput("myImage"),
-                             
+                             h3("Images from the Cluster"),
+                             verbatimTextOutput("img_array"),
+                             verbatimTextOutput("img_cluster"),
+                             uiOutput("myImage6")
                            ) # mainPanel
                            
                   ), # Navbar 1, tabPanel
@@ -120,7 +125,7 @@ server <- function(input, output, session) {
   observe({
     for (i in 1:4)
     {
-      print(i)
+      #print(i)
       local({
         my_i <- i
         imagename = paste0(my_i)
@@ -159,7 +164,6 @@ server <- function(input, output, session) {
     }
   )
   
-
   output$myImage <- renderImage(
     {
       req(input$file1)
@@ -169,6 +173,24 @@ server <- function(input, output, session) {
            height = 180)
     },deleteFile = FALSE
   )
+
+  output$img_array <- renderText({
+    req(input$file1)
+    img <- image_load(input$file1$datapath, grayscale=FALSE,target_size = c(224,224))
+    img_array <- image_to_array(img)
+    reshaped_image_array <- array_reshape(img_array,c(1,dim(img_array)))
+    prepro_img <- imagenet_preprocess_input(reshaped_image_array)
+    features <- myKerasModel |> predict(prepro_img)
+    trigger_cluster$trigger = "Cluster_5"
+    dim(features)
+  })
+  
+  trigger_cluster <- reactiveValues(trigger=NULL)
+
+  output$img_cluster <- renderText({
+    req(trigger_cluster$trigger)
+    trigger_cluster$trigger
+  })
 
 
 } # server
