@@ -69,7 +69,7 @@ model <- keras_model(inputs=model$input, outputs=output)
 
 ```{r}
 # Switch to toggle between a prototype flower-images and the actual images to be clustered
-flower_data <- FALSE
+flower_data <- TRUE
 if (flower_data){
   myPath <- "flowers"
   print("Flower Data loaded.")
@@ -172,12 +172,11 @@ write_csv(df_clustered,paste(get_time(),"_","recipe_clustered",myPath,".csv",sep
 library(imager)
 ```
 
-
 ```{r}
 myPlotData <- df_clustered |>
-  filter(.cluster=="Cluster_10") |>
+  filter(.cluster=="Cluster_3") |>
   select(myFiles)
-myPlotData <- sample(myPlotData$myFiles,5)
+myPlotData <- sample(myPlotData$myFiles,3)
 
 for (i in myPlotData){
   im <- load.image(paste(myPath,"/",i,sep=""))
