@@ -15,7 +15,7 @@
 #library(shinythemes)
 #library(tidyverse)
 #library(keras)
-lapply(c("shiny", "shinythemes", "tidyverse", "keras", "recipes","tidyclust"), require, character.only = TRUE)
+lapply(c("shiny", "shinythemes","shinycssloaders", "tidyverse", "keras", "recipes","tidyclust"), require, character.only = TRUE)
 
 # Get Data
 df_clusters <- read.csv("2023_04_16_00_32_52_recipe_clusteredweapons.csv",header=TRUE)
@@ -55,7 +55,7 @@ ui <- fluidPage(theme = shinytheme("united"),
                                        accept=c(".jpg",".png")),
                              
                              h3("Your Image"),
-                             imageOutput("myImage"),
+                             imageOutput("myImage") |> withSpinner(color="#0dc5c1"),
                              h3("Images from the Cluster"),
                              verbatimTextOutput("img_array"),
                              verbatimTextOutput("img_cluster"),
