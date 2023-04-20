@@ -27,7 +27,7 @@ myKerasModel <- application_vgg16(weights="imagenet",include_top=TRUE)
 output <- myKerasModel$layers[[length(myKerasModel$layers)-1]]$output
 myKerasModel <- keras_model(inputs=myKerasModel$input, outputs=output)
 
-myClusterModel <- readRDS("weapon_cluster.rds")
+
 # df_img_files <- df_clusters |> filter(.cluster==cluster_vector[[1]][1]) |> select(myFiles)
 # df_img_sample <- sample(df_img_files$myFiles,4)
 # df_img <- data.frame(id = c(1:4), img_path = df_img_sample)
@@ -40,10 +40,12 @@ ui <- fluidPage(theme = shinytheme("united"),
                   tabPanel("Cluster New Image", id="image_cluster",
                            mainPanel(
                              h1("Which cluster does your Image belong to?"),
+                             selectInput("var_model","Flowers or Weapons?",
+                                         choices = c("Flowers","Weapons")),
                              h3("Upload an Image"),
                              fileInput("file1","",
                                        multiple=FALSE,
-                                       accept=c(".jpg")),
+                                       accept=c(".jpg",".png")),
                              
                              h3("Your Image"),
                              imageOutput("myImage"),
@@ -106,6 +108,15 @@ server <- function(input, output, session) {
     df_img_sample <- sample(df_img_files$myFiles,4)
     df_img <- data.frame(id = c(1:4), img_path = df_img_sample)
     df_img
+  })
+  
+  predModel <- reactive({
+    if (input$var_model == "Flowers"){
+      myClusterModel <- readRDS("flowers_cluster.rds")
+    } else
+    {
+      myClusterModel <- readRDS("weapon_cluster.rds")
+    }
   })
   
   output$filenames <- renderText({
@@ -182,7 +193,7 @@ server <- function(input, output, session) {
     reshaped_image_array <- array_reshape(img_array,c(1,dim(img_array)))
     prepro_img <- imagenet_preprocess_input(reshaped_image_array)
     features <- myKerasModel |> predict(prepro_img)
-    res <- predict(myClusterModel,new_data=as.data.frame(features))
+    res <- predict(predModel(),new_data=as.data.frame(features))
     res_char <- as.character(res$".pred_cluster")
     trigger_cluster$trigger <- res_char
   })
