@@ -20,7 +20,7 @@ library(cluster)
 ```
 
 ```{r}
-use_condaenv("condatascience") # On my Windows Machine
+#use_condaenv("condatascience") # On my Windows Machine
 myPy <- py_config()$python
 myPy
 ```

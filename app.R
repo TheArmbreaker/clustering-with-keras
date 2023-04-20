@@ -34,14 +34,21 @@ myKerasModel <- keras_model(inputs=myKerasModel$input, outputs=output)
 
 # Define UI
 ui <- fluidPage(theme = shinytheme("united"),
+                tags$head(
+                  tags$style(
+                    HTML(".image-container { height: 300px; overflow-y: auto; display:inline-block;}")
+                  )
+                ),
                 navbarPage(
                   # theme = "cerulean",  # <--- To use a theme, uncomment this
                   "Image Clustering",
-                  tabPanel("Cluster New Image", id="image_cluster",
+                  id = "navbar",
+                  tabPanel("Cluster New Image", value = "image_cluster",
                            mainPanel(
                              h1("Which cluster does your Image belong to?"),
                              selectInput("var_model","Flowers or Weapons?",
-                                         choices = c("Flowers","Weapons")),
+                                         choices = c("Flowers","Weapons"),
+                                         selected = 1),
                              h3("Upload an Image"),
                              fileInput("file1","",
                                        multiple=FALSE,
@@ -52,11 +59,11 @@ ui <- fluidPage(theme = shinytheme("united"),
                              h3("Images from the Cluster"),
                              verbatimTextOutput("img_array"),
                              verbatimTextOutput("img_cluster"),
-                             uiOutput("myImage6")
+                             uiOutput("format_images_cluster")
                            ) # mainPanel
                            
                   ), # Navbar 1, tabPanel
-                  tabPanel("Show Clusters",
+                  tabPanel("Show Clusters", value = "show_cluster",
                            mainPanel(
                              class = "myMainPanel",
                              h1("Cluster of Weapon Images"),
@@ -75,13 +82,13 @@ ui <- fluidPage(theme = shinytheme("united"),
                             selectInput("var_clus",
                                         "Choose a cluster:",
                                         cluster_vector,
-                                        selected = 1),
+                                        selected = NULL),
                             h4("Filenames and Images"),
                             verbatimTextOutput("filenames"),
-                            uiOutput("myImage5")
+                            uiOutput("format_images"),
                            ) # mainPanel
                   ),
-                  tabPanel("References", "This panel is intentionally left blank")
+                  tabPanel("References", value ="ref", "This panel is intentionally left blank")
                   
                 ), # navbarPage
                 # Add a CSS block to adjust the margins of the main panel
@@ -100,16 +107,34 @@ ui <- fluidPage(theme = shinytheme("united"),
 # Define server function  
 server <- function(input, output, session) {
   
-  img_data <- reactive({
+  reactValues <- reactiveValues(trigger_cluster=NULL,
+                                myRender=NULL,
+                                activeShowCluster=NULL,
+                                activeImageCluster=NULL)
+  
+  observeEvent(input$navbar,{
+    reactValues$activeShowCluster = NULL
+    reactValues$activeImageCluster = NULL
+    if (input$navbar == "show_cluster") {
+      reactValues$activeShowCluster = "go"
+      print("show_cluster is active")
+    }
+    else if (input$navbar == "image_cluster") {
+      reactValues$activeImageCluster = "go"
+      print("image_cluster is active")
+    }
+  })
+  
+  img_data <- function(myFilter) {
     df_img_files <- df_clusters |>
-      filter(.cluster==input$var_clus) |>
+      filter(.cluster==myFilter) |>
       select(myFiles)
     
     df_img_sample <- sample(df_img_files$myFiles,4)
     df_img <- data.frame(id = c(1:4), img_path = df_img_sample)
     df_img
-  })
-  
+  }
+
   predModel <- reactive({
     if (input$var_model == "Flowers"){
       myClusterModel <- readRDS("flowers_cluster.rds")
@@ -120,8 +145,9 @@ server <- function(input, output, session) {
   })
   
   output$filenames <- renderText({
+    req(input$var_clus)
     myString=""
-    for (i in img_data()[[2]]){
+    for (i in img_data(input$var_clus)[[2]]){
       myString <- paste0(myString,"\n",i)
     }
     substr(myString,2,nchar(myString))
@@ -133,34 +159,55 @@ server <- function(input, output, session) {
         filter(.cluster==input$var_clus)
     }
   )
-
-  observe({
-    for (i in 1:4)
-    {
-      #print(i)
-      local({
-        my_i <- i
-        imagename = paste0(my_i)
-        print(imagename)
-        output[[imagename]] <-
-          renderImage({
-            list(src = file.path("weapons",img_data()$img_path[my_i]), 
-                 width = "240", height = "180",
-                 alt = "Image failed to render")
-          }, deleteFile = FALSE)
-      })
-    }
-  })
   
-  output$myImage5 <- renderUI({
-    img_output_list <- 
-      lapply(1:4,
+  observeEvent(input$var_clus,{
+    req(reactValues$activeShowCluster)
+    print("yeahaaa")
+    for (i in 5:8){
+      local({
+        loc_i <- i
+        imagename <- paste("img_",i,sep="")
+        output[[imagename]] <-
+        renderImage({
+          list(
+            src = file.path("weapons",img_data(input$var_clus)[loc_i-4,"img_path"]),
+            width = "240", height = "180",
+            alt = "Image failed to render"
+          )}, deleteFile=FALSE)
+        })
+      }
+    }, ignoreInit = TRUE)
+  
+  myImage2 <- renderImage(
+    {
+      req(input$var_clus)
+      list(src = paste0("weapons/",img_data(input$var_clus)[1,"img_path"]),
+           alt = "Here should be an image.",
+           width = 240,
+           height = 180)
+    },deleteFile = FALSE
+  )
+
+  myImage3 <- renderImage(
+    {
+      req(input$var_clus)
+      list(src = paste0("weapons/",img_data(input$var_clus)[2,"img_path"]),
+           alt = "Here should be an image.",
+           width = 240,
+           height = 180)
+    },deleteFile = FALSE
+  )
+  
+  output$format_images <- renderUI({
+    req(reactValues$activeShowCluster)
+    print("yeahaaa")
+    myImages <- 
+      lapply(5:8,
              function(i){
-               imagename= paste0(i)
-               #imageOutput(i)
-               div(style = "display:inline-block;margin-bottom:-12em", imageOutput(imagename))
-             })
-    do.call(tagList,img_output_list)
+               imagename <- paste("img_",i,sep="")
+               div(style="display:inline-block", imageOutput(imagename))
+               })
+    do.call(tagList,myImages)
   })
   
   output$ggplot_cluster <- renderPlot(
@@ -195,17 +242,44 @@ server <- function(input, output, session) {
     features <- myKerasModel |> predict(prepro_img)
     res <- predict(predModel(),new_data=as.data.frame(features))
     res_char <- as.character(res$".pred_cluster")
-    trigger_cluster$trigger <- res_char
+    reactValues$trigger <- res_char
   })
-  
-  trigger_cluster <- reactiveValues(trigger=NULL)
 
   output$img_cluster <- renderText({
-    req(trigger_cluster$trigger)
-    trigger_cluster$trigger
+    req(reactValues$trigger)
+    reactValues$trigger
   })
+  
+  observeEvent(reactValues$trigger,{
+    req(reactValues$activeImageCluster)
+    print("nooooo")
+    for (i in 1:4){
+      local({
+        loc_i <- i
+        imagename <- paste("img_",i,sep="")
+        output[[imagename]] <-
+          renderImage({
+            list(
+              src = file.path("weapons",img_data(reactValues$trigger)[loc_i,"img_path"]),
+              width = "240", height = "180",
+              alt = "Image failed to render"
+            )}, deleteFile=FALSE)
+      })
+    }
+  }, ignoreInit = TRUE)
 
-
+  output$format_images_cluster <- renderUI({
+    req(reactValues$activeImageCluster)
+    print("nooooo")
+    myImages <- 
+      lapply(1:4,
+             function(i){
+               imagename <- paste("img_",i,sep="")
+               div(style="display:inline-block", imageOutput(imagename))
+             })
+    do.call(tagList,myImages)
+  })
+  
 } # server
 
 
