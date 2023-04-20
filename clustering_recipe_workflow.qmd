@@ -1,7 +1,7 @@
 ---
 title: "clustering"
 format: html
-editor: visual
+editor: source
 ---
 
 ## Environment Preparation
@@ -122,10 +122,8 @@ img_recipe <- recipe(~.,data=myFeatArray) |>
 ```
 
 ```{r}
+# can be skipped with workflow()
 img_prep <- prep(img_recipe)
-```
-
-```{r}
 baked_rec <- bake(img_prep,myFeatArray)
 write_csv(baked_rec,paste(get_time(),"_","recipe_pcaResults_",myPath,".csv",sep=""))
 ```
@@ -133,9 +131,6 @@ write_csv(baked_rec,paste(get_time(),"_","recipe_pcaResults_",myPath,".csv",sep=
 ```{r}
 km <- k_means() |>
   set_args(num_clusters=tune())
-```
-
-```{r}
 km_wf <- workflow(img_recipe,km)
 ```
 
@@ -159,6 +154,10 @@ km_wf <- workflow(img_recipe,km)
 ```
 
 ```{r}
+km_wf
+```
+
+```{r}
 km_fit <- fit(km_wf,data=df_data)
 ```
 
@@ -167,6 +166,48 @@ df_clustered <- bind_cols(file_names,extract_cluster_assignment(km_fit))
 df_clustered
 write_csv(df_clustered,paste(get_time(),"_","recipe_clustered",myPath,".csv",sep=""))
 ```
+
+## Learning to export the model for deployment
+
+```{r}
+saveRDS(km_fit, "weapon_cluster.rds")
+```
+
+```{r}
+loadModel <- readRDS("weapon_cluster.rds")
+```
+
+```{r}
+library(butcher)
+```
+
+```{r}
+weigh(loadModel)
+```
+
+```{r}
+stripped_model <- butcher(loadModel)
+```
+
+```{r}
+weigh(stripped_model)
+```
+
+
+```{r}
+saveRDS(stripped_model,"test.rds")
+```
+
+
+```{r}
+newResults <- predict(stripped_model,new_data=as.data.frame(t(myFeatArray[3,])))
+```
+
+```{r}
+newResults[[1]]
+```
+
+## Display example cluster
 
 ```{r}
 library(imager)
