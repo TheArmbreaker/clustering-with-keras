@@ -15,7 +15,7 @@
 #library(shinythemes)
 #library(tidyverse)
 #library(keras)
-lapply(c("shiny", "shinythemes", "tidyverse", "keras"), require, character.only = TRUE)
+lapply(c("shiny", "shinythemes", "tidyverse", "keras", "recipes","tidyclust"), require, character.only = TRUE)
 
 # Get Data
 df_clusters <- read.csv("2023_04_16_00_32_52_recipe_clusteredweapons.csv",header=TRUE)
@@ -27,6 +27,7 @@ myKerasModel <- application_vgg16(weights="imagenet",include_top=TRUE)
 output <- myKerasModel$layers[[length(myKerasModel$layers)-1]]$output
 myKerasModel <- keras_model(inputs=myKerasModel$input, outputs=output)
 
+myClusterModel <- readRDS("weapon_cluster.rds")
 # df_img_files <- df_clusters |> filter(.cluster==cluster_vector[[1]][1]) |> select(myFiles)
 # df_img_sample <- sample(df_img_files$myFiles,4)
 # df_img <- data.frame(id = c(1:4), img_path = df_img_sample)
@@ -181,8 +182,9 @@ server <- function(input, output, session) {
     reshaped_image_array <- array_reshape(img_array,c(1,dim(img_array)))
     prepro_img <- imagenet_preprocess_input(reshaped_image_array)
     features <- myKerasModel |> predict(prepro_img)
-    trigger_cluster$trigger = "Cluster_5"
-    dim(features)
+    res <- predict(myClusterModel,new_data=as.data.frame(features))
+    res_char <- as.character(res$".pred_cluster")
+    trigger_cluster$trigger <- res_char
   })
   
   trigger_cluster <- reactiveValues(trigger=NULL)
