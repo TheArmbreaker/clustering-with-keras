@@ -89,7 +89,9 @@ ui <- fluidPage(theme = shinytheme("united"),
                             uiOutput("format_images") |> withSpinner(color="#0dc5c1"),
                            ) # mainPanel
                   ),
-                  tabPanel("References", value ="ref", "This panel is intentionally left blank")
+                  tabPanel("References", value ="ref",
+                           uiOutput("ref"),
+                           "This panel is intentionally left blank")
                   
                 ), # navbarPage
                 # Add a CSS block to adjust the margins of the main panel
@@ -317,6 +319,14 @@ server <- function(input, output, session) {
                div(style="display:inline-block", imageOutput(imagename))
              })
     do.call(tagList,myImages)
+  })
+  
+  getPage <- function(){
+    return(includeHTML("sql-task-gapminder-happy-2020.html"))
+  }
+  
+  output$ref <- renderUI({
+    getPage()
   })
   
 } # server
