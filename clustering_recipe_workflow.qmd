@@ -164,7 +164,7 @@ km_fit <- fit(km_wf,data=df_data)
 ```{r}
 df_clustered <- bind_cols(file_names,extract_cluster_assignment(km_fit))
 df_clustered
-write_csv(df_clustered,paste(get_time(),"_","recipe_clustered",myPath,".csv",sep=""))
+write_csv(df_clustered,paste("recipe_",myPath,"_",get_time(),"_","cluster.csv",sep=""))
 ```
 
 ## Learning to export the model for deployment

@@ -1,7 +1,7 @@
 ---
 title: "clustering"
 format: html
-editor: visual
+editor: source
 ---
 
 ## Environment Preparation
@@ -18,7 +18,7 @@ library(cluster)
 ```
 
 ```{r}
-use_condaenv("condatascience")
+# use_condaenv("condatascience") # on my windows mashine
 myPy <- py_config()$python
 myPy
 ```
@@ -147,12 +147,15 @@ km <- kmeans(pca_res$x,centers=10,nstart=3)
 ```{r}
 # map cluster and file_name
 clusters <- as.data.frame(km[[1]])
-names(clusters) <- "cluster"
+clusters <- clusters |>
+  rename("cluster" = ".cluster") |>
+  mutate(".cluster" = paste("Cluster_",.cluster))
+#names(clusters) <- ".cluster"
 clustered_files <- bind_cols(file_names,clusters)
 clustered_files
 
 # export clusters_dataframe to csv-file
-write_csv(clustered_files,paste(get_time(),"_","clustered_",myPath,".csv",sep=""))
+write_csv(clustered_files,paste("noRecipe_",myPath,"_",get_time(),"_","cluster.csv",sep=""))
 ```
 
 ```{r}

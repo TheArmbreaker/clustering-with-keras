@@ -18,19 +18,15 @@
 lapply(c("shiny", "shinythemes","shinycssloaders", "tidyverse", "keras", "recipes","tidyclust"), require, character.only = TRUE)
 
 # Get Data
-df_clusters <- read.csv("2023_04_16_00_32_52_recipe_clusteredweapons.csv",header=TRUE)
+# df_clusters <- read.csv("2023_04_16_00_32_52_recipe_clusteredweapons.csv",header=TRUE)
 # Get Clusters for DropDown Selection
-cluster_vector <- df_clusters |> select(.cluster)
+# cluster_vector <- df_clusters |> select(.cluster)
 
 myKerasModel <- application_vgg16(weights="imagenet",include_top=TRUE)
 # Change Output to second last layer to access the feature map instead of classification result.
 output <- myKerasModel$layers[[length(myKerasModel$layers)-1]]$output
 myKerasModel <- keras_model(inputs=myKerasModel$input, outputs=output)
 
-
-# df_img_files <- df_clusters |> filter(.cluster==cluster_vector[[1]][1]) |> select(myFiles)
-# df_img_sample <- sample(df_img_files$myFiles,4)
-# df_img <- data.frame(id = c(1:4), img_path = df_img_sample)
 
 # Define UI
 ui <- fluidPage(theme = shinytheme("united"),
@@ -43,12 +39,17 @@ ui <- fluidPage(theme = shinytheme("united"),
                   # theme = "cerulean",  # <--- To use a theme, uncomment this
                   "Image Clustering",
                   id = "navbar",
+                  sidebarPanel(
+                    selectInput("var_model","Load Images by Cluster",
+                                choices = c("None","Flowers","Weapons"),
+                                selected = 1),
+                    #checkboxInput("var_clusRes", label="Prediction Cluster", value=FALSE),
+                    actionButton("var_clusRes", label = "Load Model"),
+                    htmlOutput("usedModel"),
+                  ),
                   tabPanel("Cluster New Image", value = "image_cluster",
                            mainPanel(
                              h1("Which cluster does your Image belong to?"),
-                             selectInput("var_model","Flowers or Weapons?",
-                                         choices = c("Flowers","Weapons"),
-                                         selected = 1),
                              h3("Upload an Image"),
                              fileInput("file1","",
                                        multiple=FALSE,
@@ -81,7 +82,7 @@ ui <- fluidPage(theme = shinytheme("united"),
                             h4("Choose a cluster for sample images"),
                             selectInput("var_clus",
                                         "Choose a cluster:",
-                                        cluster_vector,
+                                        choices = NULL,
                                         selected = NULL),
                             h4("Filenames and Images"),
                             verbatimTextOutput("filenames"),
@@ -109,24 +110,37 @@ server <- function(input, output, session) {
   
   reactValues <- reactiveValues(trigger_cluster=NULL,
                                 myRender=NULL,
-                                activeShowCluster=NULL,
-                                activeImageCluster=NULL)
+                                #activeShowCluster=NULL,
+                                #activeImageCluster=NULL,
+                                dtuseModel=TRUE,
+                                ldModel="None")
   
-  observeEvent(input$navbar,{
-    reactValues$activeShowCluster = NULL
-    reactValues$activeImageCluster = NULL
-    if (input$navbar == "show_cluster") {
-      reactValues$activeShowCluster = "go"
-      print("show_cluster is active")
+  df_clusters <- reactive({
+    if (input$var_model == "Flowers" & reactValues$dtuseModel){
+      df_clusters <- read.csv("2023_04_20_16_18_27_recipe_clusteredflowers.csv",header=TRUE)
+    } else if (input$var_model =="Weapons" & reactValues$dtuseModel){
+      df_clusters <- read.csv("2023_04_16_00_32_52_recipe_clusteredweapons.csv",header=TRUE)
+    } else if (input$var_model =="Flowers" & reactValues$dtuseModel == FALSE){
+      df_clusters <- read.csv("2023_04_20_16_18_27_recipe_clusteredflowers.csv",header=TRUE)
     }
-    else if (input$navbar == "image_cluster") {
-      reactValues$activeImageCluster = "go"
-      print("image_cluster is active")
+    else
+    {
+      df_clusters <- read.csv("2023_04_16_00_32_52_recipe_clusteredweapons.csv",header=TRUE)
     }
   })
   
+  observe({
+    cluster_vector <- df_clusters() |> select(.cluster)
+    updateSelectInput(session,"var_clus",choices=cluster_vector,selected=1)
+  })
+  
+  observeEvent(input$navbar,{
+    reactValues$dtuseModel <- TRUE
+    reactValues$ldModel <- "None"
+  })
+  
   img_data <- function(myFilter) {
-    df_img_files <- df_clusters |>
+    df_img_files <- df_clusters() |>
       filter(.cluster==myFilter) |>
       select(myFiles)
     
@@ -135,14 +149,39 @@ server <- function(input, output, session) {
     df_img
   }
 
-  predModel <- reactive({
+  observeEvent(input$var_clusRes,{
     if (input$var_model == "Flowers"){
-      myClusterModel <- readRDS("flowers_cluster.rds")
-    } else
-    {
-      myClusterModel <- readRDS("weapon_cluster.rds")
+      print("Flowers")
+      reactValues$ldModel <- "Flowers"
+      reactValues$dtuseModel <- FALSE
+    } else if (input$var_model == "Weapons") {
+      print("Weapons")
+      reactValues$ldModel <- "Weapons"
+      reactValues$dtuseModel <- FALSE
+    }
+    else {
+      print("No Model loaded.")
+      reactValues$ldModel <- "None"
+      reactValues$dtuseModel <- TRUE
     }
   })
+  
+  predModel <- function(myString){
+    if (myString == "Flowers"){
+      myClusterModel <- readRDS("flowers_cluster.rds")
+    } else if (myString == "Weapons") {
+      myClusterModel <- readRDS("weapon_cluster.rds")      
+    }
+    else {
+      myClusterModel <- NULL
+    }
+  }
+  
+  output$usedModel <- renderUI({
+    #req(input$var_clusRes)
+    HTML(paste("<br/>","Active Model for prediction:",reactValues$ldModel,sep="<br/>"))
+  })
+
   
   output$filenames <- renderText({
     req(input$var_clus)
@@ -155,13 +194,13 @@ server <- function(input, output, session) {
   
   output$futureData <- renderTable(
     {
-      df_clusters |> count(.cluster) |>
+      df_clusters() |> count(.cluster) |>
         filter(.cluster==input$var_clus)
     }
   )
   
   observeEvent(input$var_clus,{
-    req(reactValues$activeShowCluster)
+    #req(reactValues$activeShowCluster)
     print("yeahaaa")
     for (i in 5:8){
       local({
@@ -170,7 +209,7 @@ server <- function(input, output, session) {
         output[[imagename]] <-
         renderImage({
           list(
-            src = file.path("weapons",img_data(input$var_clus)[loc_i-4,"img_path"]),
+            src = file.path(str_to_lower(input$var_model),img_data(input$var_clus)[loc_i-4,"img_path"]),
             width = "240", height = "180",
             alt = "Image failed to render"
           )}, deleteFile=FALSE)
@@ -199,7 +238,7 @@ server <- function(input, output, session) {
   )
   
   output$format_images <- renderUI({
-    req(reactValues$activeShowCluster)
+    #req(reactValues$activeShowCluster)
     print("yeahaaa")
     myImages <- 
       lapply(5:8,
@@ -212,7 +251,8 @@ server <- function(input, output, session) {
   
   output$ggplot_cluster <- renderPlot(
     {
-      df_clusters |>
+      req(input$var_model)
+      df_clusters() |>
         count(.cluster) |>
           ggplot(aes(x=reorder(.cluster,as.numeric(sub(".*_", "", .cluster))),y=n,fill=.cluster)) +
           geom_bar(stat="identity") + 
@@ -235,14 +275,18 @@ server <- function(input, output, session) {
 
   output$img_array <- renderText({
     req(input$file1)
+    if (reactValues$ldModel != "None") {
     img <- image_load(input$file1$datapath, grayscale=FALSE,target_size = c(224,224))
     img_array <- image_to_array(img)
     reshaped_image_array <- array_reshape(img_array,c(1,dim(img_array)))
     prepro_img <- imagenet_preprocess_input(reshaped_image_array)
     features <- myKerasModel |> predict(prepro_img)
-    res <- predict(predModel(),new_data=as.data.frame(features))
+    res <- predict(predModel(reactValues$ldModel),new_data=as.data.frame(features))
     res_char <- as.character(res$".pred_cluster")
-    reactValues$trigger <- res_char
+    reactValues$trigger <- res_char }
+    else {
+      "No Model loaded."
+    }
   })
 
   output$img_cluster <- renderText({
@@ -251,7 +295,7 @@ server <- function(input, output, session) {
   })
   
   observeEvent(reactValues$trigger,{
-    req(reactValues$activeImageCluster)
+    #req(reactValues$activeImageCluster)
     print("nooooo")
     for (i in 1:4){
       local({
@@ -260,7 +304,7 @@ server <- function(input, output, session) {
         output[[imagename]] <-
           renderImage({
             list(
-              src = file.path("weapons",img_data(reactValues$trigger)[loc_i,"img_path"]),
+              src = file.path(str_to_lower(input$var_model),img_data(reactValues$trigger)[loc_i,"img_path"]),
               width = "240", height = "180",
               alt = "Image failed to render"
             )}, deleteFile=FALSE)
@@ -269,7 +313,7 @@ server <- function(input, output, session) {
   }, ignoreInit = TRUE)
 
   output$format_images_cluster <- renderUI({
-    req(reactValues$activeImageCluster)
+    #req(reactValues$activeImageCluster)
     print("nooooo")
     myImages <- 
       lapply(1:4,
