@@ -41,11 +41,11 @@ ui <- fluidPage(theme = shinytheme("united"),
                   id = "navbar",
                   sidebarPanel(
                     selectInput("var_model","Load Images by Cluster",
-                                choices = c("None","Flowers","Weapons"),
+                                choices = c("Flowers","Weapons","Flowers_predict","Weapons_predict"),
                                 selected = 1),
                     #checkboxInput("var_clusRes", label="Prediction Cluster", value=FALSE),
                     actionButton("var_clusRes", label = "Load Model"),
-                    htmlOutput("usedModel"),
+                    htmlOutput("usedModel")  |> withSpinner(color="#0dc5c1"),
                   ),
                   tabPanel("Cluster New Image", value = "image_cluster",
                            mainPanel(
@@ -70,8 +70,7 @@ ui <- fluidPage(theme = shinytheme("united"),
                              h1("Cluster of Weapon Images"),
                              
                              h3("Amount of Image by Cluster"),
-                             tableOutput("futureData"),
-                             plotOutput(outputId = "ggplot_cluster"),
+                             plotOutput(outputId = "ggplot_cluster")  |> withSpinner(color="#0dc5c1"),
                              
                              h3("Display Images from Cluster"),
                              # fluidRow(
@@ -84,9 +83,10 @@ ui <- fluidPage(theme = shinytheme("united"),
                                         "Choose a cluster:",
                                         choices = NULL,
                                         selected = NULL),
+                            tableOutput("futureData"),
                             h4("Filenames and Images"),
                             verbatimTextOutput("filenames"),
-                            uiOutput("format_images"),
+                            uiOutput("format_images") |> withSpinner(color="#0dc5c1"),
                            ) # mainPanel
                   ),
                   tabPanel("References", value ="ref", "This panel is intentionally left blank")
@@ -112,33 +112,26 @@ server <- function(input, output, session) {
                                 myRender=NULL,
                                 #activeShowCluster=NULL,
                                 #activeImageCluster=NULL,
-                                dtuseModel=TRUE,
+                                #dtuseModel=TRUE,
                                 ldModel="None")
   
   df_clusters <- reactive({
-    if (input$var_model == "Flowers" & reactValues$dtuseModel){
+    if (input$var_model == "Flowers"){
       df_clusters <- read.csv("2023_04_20_16_18_27_recipe_clusteredflowers.csv",header=TRUE)
-    } else if (input$var_model =="Weapons" & reactValues$dtuseModel){
+    } else if (input$var_model == "Weapons"){
       df_clusters <- read.csv("2023_04_16_00_32_52_recipe_clusteredweapons.csv",header=TRUE)
-    } else if (input$var_model =="Flowers" & reactValues$dtuseModel == FALSE){
+    } else if (input$var_model == "Flowers_predict"){
       df_clusters <- read.csv("2023_04_20_16_18_27_recipe_clusteredflowers.csv",header=TRUE)
-    }
-    else
-    {
+    } else if (input$var_model == "Weapons_predict") {
       df_clusters <- read.csv("2023_04_16_00_32_52_recipe_clusteredweapons.csv",header=TRUE)
     }
   })
   
   observe({
     cluster_vector <- df_clusters() |> select(.cluster)
-    updateSelectInput(session,"var_clus",choices=cluster_vector,selected=1)
+    updateSelectInput(session,"var_clus",choices=cluster_vector,selected=NULL)
   })
-  
-  observeEvent(input$navbar,{
-    reactValues$dtuseModel <- TRUE
-    reactValues$ldModel <- "None"
-  })
-  
+
   img_data <- function(myFilter) {
     df_img_files <- df_clusters() |>
       filter(.cluster==myFilter) |>
@@ -150,19 +143,21 @@ server <- function(input, output, session) {
   }
 
   observeEvent(input$var_clusRes,{
-    if (input$var_model == "Flowers"){
+    model <- str_split(input$var_model,"_")[[1]][1]
+    #print(paste("test",model[[1]][1]))
+    if (model == "Flowers"){
       print("Flowers")
       reactValues$ldModel <- "Flowers"
-      reactValues$dtuseModel <- FALSE
-    } else if (input$var_model == "Weapons") {
+      #reactValues$dtuseModel <- FALSE
+    } else if (model == "Weapons") {
       print("Weapons")
       reactValues$ldModel <- "Weapons"
-      reactValues$dtuseModel <- FALSE
+      #reactValues$dtuseModel <- FALSE
     }
     else {
       print("No Model loaded.")
       reactValues$ldModel <- "None"
-      reactValues$dtuseModel <- TRUE
+      #reactValues$dtuseModel <- TRUE
     }
   })
   
@@ -209,7 +204,7 @@ server <- function(input, output, session) {
         output[[imagename]] <-
         renderImage({
           list(
-            src = file.path(str_to_lower(input$var_model),img_data(input$var_clus)[loc_i-4,"img_path"]),
+            src = file.path(str_to_lower(str_split(input$var_model,"_")[[1]][1]),img_data(input$var_clus)[loc_i-4,"img_path"]),
             width = "240", height = "180",
             alt = "Image failed to render"
           )}, deleteFile=FALSE)
@@ -304,7 +299,7 @@ server <- function(input, output, session) {
         output[[imagename]] <-
           renderImage({
             list(
-              src = file.path(str_to_lower(input$var_model),img_data(reactValues$trigger)[loc_i,"img_path"]),
+              src = file.path(str_to_lower(str_split(input$var_model,"_")[[1]][1]),img_data(reactValues$trigger)[loc_i,"img_path"]),
               width = "240", height = "180",
               alt = "Image failed to render"
             )}, deleteFile=FALSE)
