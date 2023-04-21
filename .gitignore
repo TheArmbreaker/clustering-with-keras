@@ -6,3 +6,4 @@
 *.jpg
 trash.qmd
 *.rds
+*.DS_Store
