@@ -79,11 +79,18 @@ ui <- fluidPage(theme = shinytheme("united"),
                                
                             # ),
                             h4("Choose a cluster for sample images"),
-                            selectInput("var_clus",
-                                        "Choose a cluster:",
-                                        choices = NULL,
-                                        selected = NULL),
-                            tableOutput("futureData"),
+                            fluidRow(
+                              column(width=6,selectInput("var_clus",
+                                                         "Choose a cluster:",
+                                                         choices = NULL,
+                                                         selected = NULL)),
+                              column(width=6, tableOutput("futureData"))
+                            ),
+                            fluidRow(
+                              column(width=6,textInput("label_cluster", "Label the Cluster")),
+                              column(width=4,actionButton("store_label", label = "Write to DB"))
+                            ),
+                            verbatimTextOutput("savedLabel"),
                             h4("Filenames and Images"),
                             verbatimTextOutput("filenames"),
                             uiOutput("format_images") |> withSpinner(color="#0dc5c1"),
@@ -115,7 +122,8 @@ server <- function(input, output, session) {
                                 #activeShowCluster=NULL,
                                 #activeImageCluster=NULL,
                                 #dtuseModel=TRUE,
-                                ldModel="None")
+                                ldModel="None",
+                                label_cluster_name="none")
   
   df_clusters <- reactive({
     if (input$var_model == "Flowers"){
@@ -213,27 +221,7 @@ server <- function(input, output, session) {
         })
       }
     }, ignoreInit = TRUE)
-  
-  myImage2 <- renderImage(
-    {
-      req(input$var_clus)
-      list(src = paste0("weapons/",img_data(input$var_clus)[1,"img_path"]),
-           alt = "Here should be an image.",
-           width = 240,
-           height = 180)
-    },deleteFile = FALSE
-  )
 
-  myImage3 <- renderImage(
-    {
-      req(input$var_clus)
-      list(src = paste0("weapons/",img_data(input$var_clus)[2,"img_path"]),
-           alt = "Here should be an image.",
-           width = 240,
-           height = 180)
-    },deleteFile = FALSE
-  )
-  
   output$format_images <- renderUI({
     #req(reactValues$activeShowCluster)
     print("yeahaaa")
@@ -327,6 +315,13 @@ server <- function(input, output, session) {
   
   output$ref <- renderUI({
     getPage()
+  })
+  
+  observeEvent(input$store_label,{
+    reactValues$label_cluster_name <- input$label_cluster
+    output$savedLabel <- renderText({
+      paste("stored in database:",reactValues$label_cluster_name)
+    })
   })
   
 } # server
