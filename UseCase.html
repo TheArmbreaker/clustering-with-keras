@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.2.335">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="">
+<meta name="dcterms.date" content="2023-04-23">
+
+<title>Image Clustering in R</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1.6em;
+  vertical-align: middle;
+}
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { color: #008000; } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { color: #008000; font-weight: bold; } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+</style>
+
+
+<script src="UseCase_files/libs/clipboard/clipboard.min.js"></script>
+<script src="UseCase_files/libs/quarto-html/quarto.js"></script>
+<script src="UseCase_files/libs/quarto-html/popper.min.js"></script>
+<script src="UseCase_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="UseCase_files/libs/quarto-html/anchor.min.js"></script>
+<link href="UseCase_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="UseCase_files/libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="UseCase_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="UseCase_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="UseCase_files/libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+
+
+</head>
+
+<body>
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
+<div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+  <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Image Clustering in R</h2>
+   
+  <ul>
+  <li><a href="#plan" id="toc-plan" class="nav-link active" data-scroll-target="#plan">Plan</a>
+  <ul class="collapse">
+  <li><a href="#introduction" id="toc-introduction" class="nav-link" data-scroll-target="#introduction">Introduction</a></li>
+  <li><a href="#use-case" id="toc-use-case" class="nav-link" data-scroll-target="#use-case">Use Case</a></li>
+  <li><a href="#anticipated-outcomes" id="toc-anticipated-outcomes" class="nav-link" data-scroll-target="#anticipated-outcomes">Anticipated Outcomes</a></li>
+  <li><a href="#datasets" id="toc-datasets" class="nav-link" data-scroll-target="#datasets">Datasets</a></li>
+  <li><a href="#environment" id="toc-environment" class="nav-link" data-scroll-target="#environment">Environment</a></li>
+  </ul></li>
+  <li><a href="#data" id="toc-data" class="nav-link" data-scroll-target="#data">Data</a>
+  <ul class="collapse">
+  <li><a href="#data-ingestion" id="toc-data-ingestion" class="nav-link" data-scroll-target="#data-ingestion">Data Ingestion</a></li>
+  <li><a href="#feature-extraction" id="toc-feature-extraction" class="nav-link" data-scroll-target="#feature-extraction">Feature Extraction</a></li>
+  <li><a href="#feature-engineering" id="toc-feature-engineering" class="nav-link" data-scroll-target="#feature-engineering">Feature Engineering</a></li>
+  </ul></li>
+  <li><a href="#model" id="toc-model" class="nav-link" data-scroll-target="#model">Model</a>
+  <ul class="collapse">
+  <li><a href="#optimal-k" id="toc-optimal-k" class="nav-link" data-scroll-target="#optimal-k">Optimal K</a></li>
+  <li><a href="#k-means---fit" id="toc-k-means---fit" class="nav-link" data-scroll-target="#k-means---fit">K-Means - Fit</a></li>
+  </ul></li>
+  <li><a href="#deployment" id="toc-deployment" class="nav-link" data-scroll-target="#deployment">Deployment</a>
+  <ul class="collapse">
+  <li><a href="#extraction" id="toc-extraction" class="nav-link" data-scroll-target="#extraction">Extraction</a></li>
+  <li><a href="#shiny-web-app" id="toc-shiny-web-app" class="nav-link" data-scroll-target="#shiny-web-app">Shiny Web App</a></li>
+  </ul></li>
+  <li><a href="#outlook" id="toc-outlook" class="nav-link" data-scroll-target="#outlook">Outlook</a></li>
+  </ul>
+</nav>
+</div>
+<main class="content page-columns page-full" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Image Clustering in R</h1>
+<p class="subtitle lead">with Keras, PCA and k-means</p>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p><a href="https://github.com/TheArmbreaker" target="_blank"><img src="https://img.shields.io/badge/Github-Markus%20Armbrecht-orange" alt="Github Markus Armbrecht"></a> </p>
+          </div>
+  </div>
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">April 23, 2023</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+</header>
+
+<div class="cell" data-freeze="true">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(butcher)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-freeze="true">
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>get_time <span class="ot">&lt;-</span> <span class="cf">function</span>(){</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  myTime <span class="ot">&lt;-</span> <span class="fu">Sys.time</span>()</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  myTime <span class="ot">&lt;-</span> <span class="fu">gsub</span>(<span class="st">":"</span>,<span class="st">"_"</span>,myTime)</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  myTime <span class="ot">&lt;-</span> <span class="fu">gsub</span>(<span class="st">" "</span>,<span class="st">"_"</span>,myTime)</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  myTime <span class="ot">&lt;-</span> <span class="fu">gsub</span>(<span class="st">"-"</span>,<span class="st">"_"</span>,myTime)</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span> (myTime)</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>  }</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<section id="plan" class="level1 page-columns page-full">
+<h1>Plan</h1>
+<section id="introduction" class="level2">
+<h2 class="anchored" data-anchor-id="introduction">Introduction</h2>
+<p>The requirement of self-labeled image data became obvious, when I was researching a project for my masterthesis. I was looking for a way to automatically sort images by their content and found a project from Gabo Flomo on <a href="https://towardsdatascience.com/how-to-cluster-images-based-on-visual-similarity-cd6e7209fe34">(towardsdatascience.com: 2020)</a>, in which flower-images are clustered by similarity.</p>
+<p>In this R learning project the python code from Gabo Flomo is used as blueprint. It is translated to R and incorporated to the Data Science Life Cycle.</p>
+</section>
+<section id="use-case" class="level2">
+<h2 class="anchored" data-anchor-id="use-case">Use Case</h2>
+<p>The thesis subject is going to be about object detection on military personal. For such topics almost no dataset is publicly available. Therefore, datasets without labels or not necessarily relevant images will be used for clustering.</p>
+<p>To provide comparable code the original flower images and images of weapons are used. First the images are provided to a pre-trained keras model with an omitted output layer. This provides a feature matrix with information on image features. On the matrices of all images a principal component analysis is performed and the results are forwarded to kmeans-clustering. The obtained results are mapped to the image files. This enables a shiny web app to load respective images of a cluster. The shiny web app is used as deployment stage in the Data Science Life Cycle.</p>
+<p>Additionally, it shall be mentioned that the coding is based on base functions as well as the tidyverse-package. This enables the utilisation of features which were not found in the respective other package. For example an elbow-curve was plotted with baseR.</p>
+</section>
+<section id="anticipated-outcomes" class="level2">
+<h2 class="anchored" data-anchor-id="anticipated-outcomes">Anticipated Outcomes</h2>
+<p>Regarding the anticipated outcomes it is highlighted that the code shall support exploratory activities. The following images are examples from the datasets to support following argumentation.</p>
+<p>For flower images 10 different clusters can be expected. This reflects the plant species labels provided in the dataset description.</p>
+<p>For weapon images an unknown amount of clusters can be expected. The optimal k will be calculated in the Data section. However, the objective is to sort the image files by some degree to simplify any manual label activities. For example it is imagined that images of rifles and pistols are in separate clusters. In this context it is important to consider that other image features will influence the cluster as well. Such superior influences can be people holding a weapon, different camera angles in the image and so on.</p>
+<div id="fig-flowers" class="quarto-layout-panel" style="text-align:center;">
+<figure class="figure">
+<div class="quarto-layout-row quarto-layout-valign-top">
+<div class="quarto-layout-cell" style="flex-basis: 50.0%;justify-content: center;">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="flowers/0001.png" class="img-fluid figure-img"></p>
+<p></p><figcaption class="figure-caption">Example 1</figcaption><p></p>
+</figure>
+</div>
+</div>
+<div class="quarto-layout-cell" style="flex-basis: 50.0%;justify-content: center;">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="flowers/0009.png" class="img-fluid figure-img"></p>
+<p></p><figcaption class="figure-caption">Example 2</figcaption><p></p>
+</figure>
+</div>
+</div>
+</div>
+<div class="quarto-layout-row quarto-layout-valign-top">
+<div class="quarto-layout-cell" style="flex-basis: 50.0%;justify-content: center;">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="flowers/0002.png" class="img-fluid figure-img"></p>
+<p></p><figcaption class="figure-caption">Example 3</figcaption><p></p>
+</figure>
+</div>
+</div>
+<div class="quarto-layout-cell" style="flex-basis: 50.0%;justify-content: center;">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="flowers/0003.png" class="img-fluid figure-img"></p>
+<p></p><figcaption class="figure-caption">Example 4</figcaption><p></p>
+</figure>
+</div>
+</div>
+</div>
+<p></p><figcaption class="figure-caption">Figure&nbsp;1: Example Images Flowers</figcaption><p></p>
+</figure>
+</div>
+<div id="fig-weapons" class="quarto-layout-panel" style="text-align:center;">
+<figure class="figure">
+<div class="quarto-layout-row quarto-layout-valign-top">
+<div class="quarto-layout-cell" style="flex-basis: 50.0%;justify-content: center;">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="weapons/ee619b2e6f861f1e.jpg" class="img-fluid figure-img" width="224"></p>
+<p></p><figcaption class="figure-caption">Example 1</figcaption><p></p>
+</figure>
+</div>
+</div>
+<div class="quarto-layout-cell" style="flex-basis: 50.0%;justify-content: center;">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="weapons/e9552b04f79630ee.jpg" class="img-fluid figure-img" width="224"></p>
+<p></p><figcaption class="figure-caption">Example 2</figcaption><p></p>
+</figure>
+</div>
+</div>
+</div>
+<div class="quarto-layout-row quarto-layout-valign-top">
+<div class="quarto-layout-cell" style="flex-basis: 100.0%;justify-content: center;">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="weapons/beef33684f8a177e.jpg" class="img-fluid figure-img" width="480"></p>
+<p></p><figcaption class="figure-caption">Example 3</figcaption><p></p>
+</figure>
+</div>
+</div>
+</div>
+<div class="quarto-layout-row quarto-layout-valign-top">
+<div class="quarto-layout-cell" style="flex-basis: 100.0%;justify-content: center;">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="weapons/c1ac27d27c37d962.jpg" class="img-fluid figure-img" width="480"></p>
+<p></p><figcaption class="figure-caption">Example 4</figcaption><p></p>
+</figure>
+</div>
+</div>
+</div>
+<p></p><figcaption class="figure-caption">Figure&nbsp;2: Example Images Weapons</figcaption><p></p>
+</figure>
+</div>
+</section>
+<section id="datasets" class="level2">
+<h2 class="anchored" data-anchor-id="datasets">Datasets</h2>
+<p>The images can be found here:</p>
+<ul>
+<li>Weapons in Images on <a href="https://www.kaggle.com/datasets/jubaerad/weapons-in-images-segmented-videos">kaggle.com</a></li>
+<li>Flower Color Images on <a href="https://www.kaggle.com/datasets/olgabelitskaya/flower-color-images">kaggle.com</a></li>
+</ul>
+<p>To execute the code and the shiny web app the data shall be copied in folders “flowers” and “weapons” in the Rproject folder.<br>
+For flowers use the images in the subfolder “flower_images” and for weapons the subfolder “Weapons-in-Images” in the download files.</p>
+</section>
+<section id="environment" class="level2 page-columns page-full">
+<h2 class="anchored" data-anchor-id="environment">Environment</h2>
+<p>From experience in past projects it is known that my daily working computer is not able to perform image processing in keras without crashing. Therefore, solutions like Amazon Sagemaker Studio Lab, Databricks Community Edition and Amazon Sagemaker (without Studio Lab) were explored.</p>
+<p>While Sagemaker Studio Lab only supported Python, the Amazon Sagemaker solution was promising, despite generating a small amount of costs within the free usage limits of AWS. Unfortunately, loading a pre-trained keras model within an Jupyter Lab environment of Amazon Sagemaker returned twisted input shapes and therefore the code crashed when trying to insert images. Interestingly an R instance on local machines would provide a model with correct input-shapes. Thus, an stackoverflow-question was released for clarification of a bug.</p>
+
+<div class="no-row-height column-margin column-container"><div class="">
+<p>Stackoverflow<br>
+<a href="https://stackoverflow.com/questions/75988301/vgg16-different-shape-between-r-and-python-how-to-deal-with-that">1. my Question and my Answer</a><br>
+<a href="https://imgur.com/a/5dOaJWf">2. Example Images InputLayer</a></p>
+</div></div><p>The Databricks environment was registered via the community edition link. However it skyrocketed costs at AWS within one night so that the approach had to be canceled.<br>
+This project is implemented on a Windows Gaming PC for modeling activities and a MacBook for writing code and text. This approach is supported by a Github Repository to exchange files and results.</p>
+</section>
+</section>
+<section id="data" class="level1 page-columns page-full">
+<h1>Data</h1>
+<section id="data-ingestion" class="level2 page-columns page-full">
+<h2 class="anchored" data-anchor-id="data-ingestion">Data Ingestion</h2>
+<p>This project performs two different approaches on each of the introduced datasets. Thus, in the deployment phase four different models will be provided for the User’s comparision. This approach holds some conflicting libraries or duplicated steps. While this page focuses on the code for tidyverse, tidyclus, recipe package, there is another simplified file with code in BaseR.</p>
+
+<div class="no-row-height column-margin column-container"><div class="">
+<p>Link to BaseR Code <a href="clustering_code.qmd">Link</a></p>
+</div></div><p>The following approach will result in a pipeline, which can be used for deployment and prediction. The BaseR code will not use a pipeline or prediction function and only provides results for the datasets. However, those results will also be used in deployment to search differences in the PCA of tidyverse and BaseR.</p>
+<p>The following code enables to switch between the flowers and weapons dataset, without changing other code chunks in the process.</p>
+<div class="cell" data-freeze="true">
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Switch to toggle between a prototype flower-images and the weapon images to be clustered</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>flower_data <span class="ot">&lt;-</span> <span class="cn">TRUE</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (flower_data){</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  myPath <span class="ot">&lt;-</span> <span class="st">"flowers"</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">print</span>(<span class="st">"Flower Data loaded."</span>)</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>} <span class="cf">else</span> {</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>  myPath <span class="ot">&lt;-</span> <span class="st">"weapons"</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">print</span>(<span class="st">"Weapon Data loaded."</span>)</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Actual loading of files in path to a list</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>myFiles <span class="ot">&lt;-</span> <span class="fu">list.files</span>(myPath)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="feature-extraction" class="level2">
+<h2 class="anchored" data-anchor-id="feature-extraction">Feature Extraction</h2>
+<p>At the beginning the images are prepared for feature extraction. The following code-chunk is based on keras-functions to load an image, transform it to an array that is suitable for the pretrained model and the prediction is performed for that image. The code returns the features of the model.</p>
+<div class="cell" data-freeze="true">
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>get_features <span class="ot">&lt;-</span> <span class="cf">function</span>(image_file,myModel){</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="co"># takes: image file and model</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="co"># returns: feature vector for the provided image</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  <span class="co"># description:</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  <span class="co"># the image is loaded with color and scaled to 224x224 px.</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>  <span class="co"># In the next step the image is converted to an array and this array is prepared for prediction on the provided model</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>  img <span class="ot">&lt;-</span> <span class="fu">image_load</span>(image_file, <span class="at">grayscale=</span><span class="cn">FALSE</span>,<span class="at">target_size =</span> <span class="fu">c</span>(<span class="dv">224</span>,<span class="dv">224</span>))</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>  img_array <span class="ot">&lt;-</span> <span class="fu">image_to_array</span>(img)</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>  reshaped_image_array <span class="ot">&lt;-</span> <span class="fu">array_reshape</span>(img_array,<span class="fu">c</span>(<span class="dv">1</span>,<span class="fu">dim</span>(img_array)))</span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>  prepro_img <span class="ot">&lt;-</span> <span class="fu">imagenet_preprocess_input</span>(reshaped_image_array)</span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>  features <span class="ot">&lt;-</span> myModel <span class="sc">|&gt;</span> <span class="fu">predict</span>(prepro_img)</span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(features)</span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>In the code-chunk above the pre-trained model is provided as argument. This enables changing the model for later improvement. The following code-chunk is loading the pre-trained model VGG16 from the keras library. Note, that the output layer is transformed to omit the actual output layer. Thus, the output is now the second last layer and will provide features as a matrix instead of classification labels.</p>
+<div class="cell" data-freeze="true">
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Load model</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>model <span class="ot">&lt;-</span> <span class="fu">application_vgg16</span>(<span class="at">weights=</span><span class="st">"imagenet"</span>,<span class="at">include_top=</span><span class="cn">TRUE</span>)</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Change Output to second last layer to access the feature map instead of classification result.</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>output <span class="ot">&lt;-</span> model<span class="sc">$</span>layers[[<span class="fu">length</span>(model<span class="sc">$</span>layers)<span class="sc">-</span><span class="dv">1</span>]]<span class="sc">$</span>output</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>model <span class="ot">&lt;-</span> <span class="fu">keras_model</span>(<span class="at">inputs=</span>model<span class="sc">$</span>input, <span class="at">outputs=</span>output)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>In the following code-chunk every image file is processed with above described function to populate a list features and transform it to an Array with 4096 features per row (image).</p>
+<div class="cell" data-freeze="true">
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># empty list to hold extracted features per image</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>myFeatures <span class="ot">&lt;-</span> <span class="fu">list</span>()</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="co"># fill list with features by looping through file list and calling the function get_features</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (img_file <span class="cf">in</span> myFiles){</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>  <span class="co"># create path and call function</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>  path <span class="ot">&lt;-</span> <span class="fu">paste</span>(myPath,<span class="st">"/"</span>,img_file,<span class="at">sep=</span><span class="st">""</span>)</span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>  feat <span class="ot">&lt;-</span> <span class="fu">get_features</span>(path,model)</span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>  <span class="co"># append List with features</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>  len <span class="ot">&lt;-</span> <span class="fu">length</span>(myFeatures)</span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>  myFeatures[[len<span class="sc">+</span><span class="dv">1</span>]]<span class="ot">&lt;-</span>feat</span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>myFeatArray <span class="ot">&lt;-</span> <span class="fu">matrix</span>(<span class="fu">unlist</span>(myFeatures), <span class="at">ncol=</span><span class="dv">4096</span>, <span class="at">byrow=</span><span class="cn">TRUE</span>) </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Finally, the extracted features are transformed to a dataframe.</p>
+<div class="cell" data-freeze="true">
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># transform myFiles list to a single column dataframe</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>file_names <span class="ot">&lt;-</span> <span class="fu">as.data.frame</span>(myFiles)</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="co"># create a dataframe with pcomp per row</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>file_features <span class="ot">&lt;-</span> <span class="fu">as.data.frame</span>(myFeatArray)</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a><span class="co"># append both dataframes to one (no join due to missing parameter)</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>df_data <span class="ot">&lt;-</span> <span class="fu">bind_cols</span>(file_names,file_features)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="feature-engineering" class="level2">
+<h2 class="anchored" data-anchor-id="feature-engineering">Feature Engineering</h2>
+<p>To reduce the amount of features per image. PCA is applied to reduce the dataset to 100 components per image. This value is based on the blueprint from flower clustering, however it holds potential for later optimization in an ML workflow.</p>
+<p>The code below creates an recipe with the single pca_step. No normalization, because for some vectors the sum is zero and this would yield an error for division by zero.</p>
+<div class="cell" data-freeze="true">
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>img_recipe <span class="ot">&lt;-</span> <span class="fu">recipe</span>(<span class="sc">~</span>.,<span class="at">data=</span>myFeatArray) <span class="sc">|&gt;</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_pca</span>(<span class="fu">all_numeric</span>(),<span class="at">num_comp=</span><span class="dv">100</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+</section>
+<section id="model" class="level1">
+<h1>Model</h1>
+<section id="optimal-k" class="level2">
+<h2 class="anchored" data-anchor-id="optimal-k">Optimal K</h2>
+<p>The tidyverse and tidyclus libraries provide a tuning function that works with bootstrapping. However, this is very resource and time consuming and therefore executed with times = 1.</p>
+<p>Furthermore the workflow function from the recipe library is introduced, which can be used instead of preparation and baking. In this function the recipe and the model are provided.</p>
+<div class="cell" data-freeze="true">
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># generate k_means function with tuneing for optimal k.</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>optK <span class="ot">&lt;-</span> <span class="fu">k_means</span>() <span class="sc">|&gt;</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set_args</span>(<span class="at">num_clusters=</span><span class="fu">tune</span>())</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="co"># generate workflow with preprocessing recipe and model</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>optK_wf <span class="ot">&lt;-</span> <span class="fu">workflow</span>(img_recipe,optK)</span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a><span class="co"># set bootstraps</span></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>boots <span class="ot">&lt;-</span> <span class="fu">bootstraps</span>(df_data,<span class="at">times=</span><span class="dv">1</span>)</span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a><span class="co"># execute cluster tuning and store results</span></span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>tune_res <span class="ot">&lt;-</span> <span class="fu">tune_cluster</span>(</span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a>  optK_wf,</span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a>  <span class="at">resample =</span> boots</span>
+<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-17"><a href="#cb9-17" aria-hidden="true" tabindex="-1"></a><span class="co"># retrieve tuning results</span></span>
+<span id="cb9-18"><a href="#cb9-18" aria-hidden="true" tabindex="-1"></a><span class="fu">collect_metrics</span>(tune_res)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="k-means---fit" class="level2">
+<h2 class="anchored" data-anchor-id="k-means---fit">K-Means - Fit</h2>
+<p>After the optimal k was established, the model function can be provided with a number of clusters to generate. This will be introduced to a new workflow, which then is used for the fit.</p>
+<div class="cell" data-freeze="true">
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co"># generate k_means function with optimal k value</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>km <span class="ot">&lt;-</span> <span class="fu">k_means</span>() <span class="sc">|&gt;</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set_args</span>(<span class="at">num_clusters=</span><span class="dv">10</span>)</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="co"># generate workflow with preprocessing recipe and model</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>km_wf <span class="ot">&lt;-</span> <span class="fu">workflow</span>(img_recipe,km)</span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a><span class="co"># fit the model to the data</span></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>km_fit <span class="ot">&lt;-</span> <span class="fu">fit</span>(km_wf,<span class="at">data=</span>df_data)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+</section>
+<section id="deployment" class="level1 page-columns page-full">
+<h1>Deployment</h1>
+<section id="extraction" class="level2">
+<h2 class="anchored" data-anchor-id="extraction">Extraction</h2>
+<p>Usually model accuracy is reviewed before deployment, but the model is meant to support the exploration of a large amount of images. Therefore, the model results are reviewed and discussed in the deployment chapter of this work.</p>
+<p>Before review the cluster assignments are mapped to the image-files. Additionally, the result-table is stored in an csv-file. This will enable the user of the deployed data to look at a cluster’s contents.</p>
+<div class="cell" data-freeze="true">
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co"># string for filepath</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>myfilepath <span class="ot">&lt;-</span> <span class="fu">paste</span>(<span class="st">"recipe_"</span>,myPath,<span class="st">"_"</span>,<span class="fu">get_time</span>(),<span class="st">"_cluster"</span>,<span class="at">sep=</span><span class="st">""</span>)</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="co"># extracting the cluster-assignments and bind them to the filename dataframe</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>df_clustered <span class="ot">&lt;-</span> <span class="fu">bind_cols</span>(file_names,<span class="fu">extract_cluster_assignment</span>(km_fit))</span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="co"># storing results in csv file</span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a><span class="fu">write_csv</span>(df_clustered,<span class="fu">paste</span>(myfilepath,<span class="st">".csv"</span>,<span class="at">sep=</span><span class="st">""</span>))</span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a><span class="co"># returning results</span></span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>df_clustered</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>The model shall also be used for clustering of new images with the predict()-function. Therefore, the model is stored in an RDS-file.</p>
+<div class="cell" data-freeze="true">
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="fu">saveRDS</span>(km_fit, <span class="fu">paste</span>(myfilepath,<span class="st">".rds"</span>,<span class="at">sep=</span><span class="st">""</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>The stored model has a very large file-size, especially for the weapons-model. This file size was in conflict with github’s storage limits. Other options like h5-files and deployment with APIs were investigated. The h5-files did not work probably, the API solution with ventier did not ease the file size problem.<br>
+However, the butcher-library can be used to reduce the fitted model to essentials. The following code-chunks show that vital parts of the model are within … . Unfortunately for the size, those components were not removed with butcher.</p>
+<div class="cell" data-freeze="true">
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="fu">weigh</span>(km_fit)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-freeze="true">
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>stripped_model <span class="ot">&lt;-</span> <span class="fu">butcher</span>(km_fit)</span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="fu">weigh</span>(stripped_model)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="shiny-web-app" class="level2 page-columns page-full">
+<h2 class="anchored" data-anchor-id="shiny-web-app">Shiny Web App</h2>
+<p>This part covers the model-deployment in a shiny web app. For details on the code behind the app, please click on the technical documentation link in the right margin.</p>
+
+<div class="no-row-height column-margin column-container"><div class="">
+<p>Links to:<br>
+<a href="http://www.google.com">Shiny App</a><br>
+<a href="http://www.bing.com">Shiny TecDoc</a></p>
+</div></div><p>In the section BANANA RAMA of the app a bar graph shows the amount of images per cluster for one of the four models. To measure the results (similarity of images in clusters) in a heuristic manner, four random images are displayed when a specific cluster is activated.</p>
+<p>Regarding both models of the flower images one can speak about success. However, the dataset description suggested 10 clusters by the labeled species. The model only extracted 9 clusters with a strong focus on color. Here might be an opportunity to for further modeling activities to achieve clusters by species.<br>
+For the weapon images, 10 clusters were chosen based on the elbow-curve. The clusters do not distinguish between pistols or rifles, but the enable the distinction of images with people aiming with a rifle, camera footage, groups of people or other scenic photographs. This can be seen as success to sort out irrelevant images for labeling. However, in comparison to the relative clean flower dataset the weapon dataset was very indistinct. Therefore, more clusters or other feature extraction approaches might be useful in the model. Last but not least, another amount of PCA could be reviewed for both datasets.</p>
+<p>In the section BANANA IMAGE of the app any image can be uploaded and the predict() function is going to sort it into one of the extracted clusters. Finally, four random images of the predicted cluster are shown for comparison by the human eye.</p>
+<p>The app is published at shineable.io.</p>
+</section>
+</section>
+<section id="outlook" class="level1">
+<h1>Outlook</h1>
+<p>This project could be improved or further devoloped. Huge potential has the implementation of MLflow to track improvements in PCA, k-means or feature extraction with keras.</p>
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    target: function(trigger) {
+      return trigger.previousElementSibling;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  function tippyHover(el, contentFn) {
+    const config = {
+      allowHTML: true,
+      content: contentFn,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start'
+    };
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var filterRegex = new RegExp('/' + window.location.host + '/');
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+    var links = window.document.querySelectorAll('a:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+          // target, if specified
+          link.setAttribute("target", "_blank");
+      }
+    }
+});
+</script>
+</div> <!-- /content -->
+
+
+
+</body></html>

@@ -1,0 +1,57 @@
+---
+title: "User Guide"
+subtitle: "for Image Clustering and Analysis in Shiny"
+author: "Markus Armbrecht"
+date: "`r Sys.Date()`"
+format:
+  html:
+    page-layout: article
+    toc: false
+    link-external-newwindow: true
+editor: source
+---
+
+This document covers basics features to use the deployed app and also highlights very specific codeing challenges.  
+Code which is deemed to be not very surprising is commented in the source code of app.R.
+
+The template / theme for the shiny app was provided by the [Data Professor](http://github.com/dataprofessor) and Winston Chang on Github and further modified by myself.
+
+## Loading Data and Model
+
+The data is loaded from the model results, which are stored in CSV-files.
+Based on the selection the csv-file is loaded.
+
+The options with _predict reflect the results from the recipe-workflow. Those without are the results from Base R code.
+
+- Flowers
+- Weapons
+- Flowers_predict
+- Weapons_predict
+
+To load the model for prediction the selection is used. As the baseR-model is not deployed, the model is loaded based on the substring before "_predict".
+
+
+## Loading Images
+
+The images are loaded with an ObserveEvent-function - either based on a cluster-prediction or cluster-selection. Based on the requested cluster four random files are sampled and rendered.  
+
+Code for loading and displaying images is separated from each another to prevent images from overlapping and contain the output in a div-container.  
+
+The loading function uses local() to render each image in a separate environment and append it to the server-output. The output will then be displayed via a renderUI-function that utilizes the outputImage() function.
+
+This very specific solution is based on this [Stackoverflow](https://stackoverflow.com/a/69400158/19730678) post. It was re-designed with lists and other approaches, but turned out to be the only working approach.  
+Therin the local() function is key to success for the rendering. If this is not used, the [[output]] will be overwritten and the same image is displayed four times. Further details on the local() function can be found in this post on [Stackoverflow](https://stackoverflow.com/a/10904810/19730678).
+
+## Cluster New Images
+
+The page to cluster images enables the upload of new pictures and prediction of a cluster. Only .png and .jpg files can be uploaded.  
+
+The prediction will use a reactiveValue for displaying example images of the predicted cluster.  
+
+## Show Clusters
+
+The show clusters page enables the investigation of cluster content.   
+The displayed images depend on the selected cluster. This also shows Base R results to explore differences.  
+
+Furthermore the cluster can be labeled with a name. This string is a dummy and might be connected to an sql database for actually storing the input.
+

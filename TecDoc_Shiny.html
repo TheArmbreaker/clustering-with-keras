@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.2.335">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Markus Armbrecht">
+<meta name="dcterms.date" content="2023-04-23">
+
+<title>User Guide</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1.6em;
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="TecDoc_Shiny_files/libs/clipboard/clipboard.min.js"></script>
+<script src="TecDoc_Shiny_files/libs/quarto-html/quarto.js"></script>
+<script src="TecDoc_Shiny_files/libs/quarto-html/popper.min.js"></script>
+<script src="TecDoc_Shiny_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="TecDoc_Shiny_files/libs/quarto-html/anchor.min.js"></script>
+<link href="TecDoc_Shiny_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="TecDoc_Shiny_files/libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="TecDoc_Shiny_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="TecDoc_Shiny_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="TecDoc_Shiny_files/libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+
+
+</head>
+
+<body class="fullcontent">
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
+
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">User Guide</h1>
+<p class="subtitle lead">for Image Clustering and Analysis in Shiny</p>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>Markus Armbrecht </p>
+          </div>
+  </div>
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">April 23, 2023</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+</header>
+
+<p>This document covers basics features to use the deployed app and also highlights very specific codeing challenges.<br>
+Code which is deemed to be not very surprising is commented in the source code of app.R.</p>
+<p>The template / theme for the shiny app was provided by the <a href="http://github.com/dataprofessor">Data Professor</a> and Winston Chang on Github and further modified by myself.</p>
+<section id="loading-data-and-model" class="level2">
+<h2 class="anchored" data-anchor-id="loading-data-and-model">Loading Data and Model</h2>
+<p>The data is loaded from the model results, which are stored in CSV-files. Based on the selection the csv-file is loaded.</p>
+<p>The options with _predict reflect the results from the recipe-workflow. Those without are the results from Base R code.</p>
+<ul>
+<li>Flowers</li>
+<li>Weapons</li>
+<li>Flowers_predict</li>
+<li>Weapons_predict</li>
+</ul>
+<p>To load the model for prediction the selection is used. As the baseR-model is not deployed, the model is loaded based on the substring before “_predict”.</p>
+</section>
+<section id="loading-images" class="level2">
+<h2 class="anchored" data-anchor-id="loading-images">Loading Images</h2>
+<p>The images are loaded with an ObserveEvent-function - either based on a cluster-prediction or cluster-selection. Based on the requested cluster four random files are sampled and rendered.</p>
+<p>Code for loading and displaying images is separated from each another to prevent images from overlapping and contain the output in a div-container.</p>
+<p>The loading function uses local() to render each image in a separate environment and append it to the server-output. The output will then be displayed via a renderUI-function that utilizes the outputImage() function.</p>
+<p>This very specific solution is based on this <a href="https://stackoverflow.com/a/69400158/19730678">Stackoverflow</a> post. It was re-designed with lists and other approaches, but turned out to be the only working approach.<br>
+Therin the local() function is key to success for the rendering. If this is not used, the [[output]] will be overwritten and the same image is displayed four times. Further details on the local() function can be found in this post on <a href="https://stackoverflow.com/a/10904810/19730678">Stackoverflow</a>.</p>
+</section>
+<section id="cluster-new-images" class="level2">
+<h2 class="anchored" data-anchor-id="cluster-new-images">Cluster New Images</h2>
+<p>The page to cluster images enables the upload of new pictures and prediction of a cluster. Only .png and .jpg files can be uploaded.</p>
+<p>The prediction will use a reactiveValue for displaying example images of the predicted cluster.</p>
+</section>
+<section id="show-clusters" class="level2">
+<h2 class="anchored" data-anchor-id="show-clusters">Show Clusters</h2>
+<p>The show clusters page enables the investigation of cluster content.<br>
+The displayed images depend on the selected cluster. This also shows Base R results to explore differences.</p>
+<p>Furthermore the cluster can be labeled with a name. This string is a dummy and might be connected to an sql database for actually storing the input.</p>
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    target: function(trigger) {
+      return trigger.previousElementSibling;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  function tippyHover(el, contentFn) {
+    const config = {
+      allowHTML: true,
+      content: contentFn,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start'
+    };
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var filterRegex = new RegExp('/' + window.location.host + '/');
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+    var links = window.document.querySelectorAll('a:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+          // target, if specified
+          link.setAttribute("target", "_blank");
+      }
+    }
+});
+</script>
+</div> <!-- /content -->
+
+
+
+</body></html>
