@@ -1,6 +1,5 @@
 .Rproj.user
 .Rhistory
-.RData
 .Ruserdata
 *.png
 *.jpg
@@ -8,3 +7,6 @@ trash.qmd
 *.rds
 *.DS_Store
 sql-task-gapminder-happy-2020.html
+.RData
+.RDataTmp
+weapons_featArray.csv

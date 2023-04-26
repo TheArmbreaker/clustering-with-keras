@@ -1,8 +1,10 @@
 ---
-title: "clustering"
+title: "Base R code"
 format: html
 editor: source
 ---
+
+This document shows Base R code for the R learning project. If there are any differences compared to the tidyverse-workflow in the main document, those are described below.
 
 ## Environment Preparation
 
@@ -11,14 +13,14 @@ editor: source
 library(reticulate)
 library(keras)
 library(tensorflow)
-library(tidyverse)
+library(dplyr)
 library(factoextra)
 library(cluster)
-#library(imager)
+#library(imager) # not loaded yet, because of conflicts
 ```
 
 ```{r}
-# use_condaenv("condatascience") # on my windows mashine
+use_condaenv("condatascience") # on my windows machine
 myPy <- py_config()$python
 myPy
 ```
@@ -29,6 +31,7 @@ tf$constant("Hello Tensorflow!")
 
 ```{r}
 get_time <- function(){
+  # returns time-string without special characters
   myTime <- Sys.time()
   myTime <- gsub(":","_",myTime)
   myTime <- gsub(" ","_",myTime)
@@ -37,7 +40,7 @@ get_time <- function(){
   }
 ```
 
-## Preparation for Clustering
+## Keras and image feature extraction
 
 ```{r}
 get_features <- function(image_file,myModel){
@@ -63,11 +66,9 @@ output <- model$layers[[length(model$layers)-1]]$output
 model <- keras_model(inputs=model$input, outputs=output)
 ```
 
-## Feature Extraction
-
 ```{r}
 # Switch to toggle between a prototype flower-images and the actual images to be clustered
-flower_data <- FALSE
+flower_data <- TRUE
 if (flower_data){
   myPath <- "flowers"
   print("Flower Data loaded.")
@@ -99,12 +100,16 @@ for (img_file in myFiles){
 x <- matrix(unlist(myFeatures), ncol=4096, byrow=TRUE) 
 ```
 
-## PCA
+After the the matrix is created. There are 4375 images with 4096 variables each.
 
 ```{r}
 # x <- array(unlist(myFeatures),dim=c(length(myFeatures),length(myFeatures[[1]])))
 dim(x)
 ```
+
+## PCA
+
+In comparision to the recipe the pca analysis is performed with prcomp(). According to statology the eigenvectors should be multiplied by -1.  
 
 ```{r}
 pca_res <- prcomp(x,rank=100)
@@ -115,30 +120,26 @@ pca_res$x <- -1*pca_res$x
 # transform myFiles list to a single column dataframe
 file_names <- as.data.frame(myFiles)
   
-# create a dataframe with pcomp per row
-# file_features <- myFeatures |> map(as_tibble) |> reduce(bind_rows)
+# create a dataframe with prcomp per row
 file_features <- as.data.frame(pca_res$x)
 
 # append both dataframes to one (no join due to missing parameter)
+# bind_cols is loaded from dplyr
 df_pca <- bind_cols(file_names,file_features)
 
 write_csv(df_pca,paste(get_time(),"_","pcaResults_",myPath,".csv",sep=""))
 ```
 
-```{r}
-#| include: false
-#pca_res <- prcomp(df_features[,2:length(df_features)],rank=100)
-#pca_res$x <- -1*pca_res$x
-#pca_res$x
-
-#write_csv(clustered_files,paste("pcaResults_",myPath,".csv",sep=""))
-```
+The prcomp() output can be used to plot the elbow curve. There is a special library called factoextra for this.
 
 ```{r}
-fviz_nbclust(pca_res$x,kmeans,method="wss",k.max=70)
+fviz_nbclust(file_features,kmeans,method="wss",k.max=66)
 ```
 
 ## Clustering
+
+The standard kmeans() function is used instead of fitting and preprocessing.
+Afterwards cluster-assignments are extracted and mapped to the file-names.
 
 ```{r}
 km <- kmeans(pca_res$x,centers=10,nstart=3)
@@ -146,10 +147,10 @@ km <- kmeans(pca_res$x,centers=10,nstart=3)
 
 ```{r}
 # map cluster and file_name
-clusters <- as.data.frame(km[[1]])
+clusters <- as.data.frame(km[1])
 clusters <- clusters |>
-  rename("cluster" = ".cluster") |>
-  mutate(".cluster" = paste("Cluster_",.cluster))
+  rename(".cluster" = "cluster") |>
+  mutate(".cluster" = paste("Cluster_",.cluster,sep=""))
 #names(clusters) <- ".cluster"
 clustered_files <- bind_cols(file_names,clusters)
 clustered_files
@@ -158,24 +159,8 @@ clustered_files
 write_csv(clustered_files,paste("noRecipe_",myPath,"_",get_time(),"_","cluster.csv",sep=""))
 ```
 
-```{r}
-# only load this after clustering run. Package conflict can occure.
-library(imager)
-```
+The kmeans object provide further arguments to receive details like the cluster assignments, but also the cluster sizes.
 
 ```{r}
 km$size
-```
-
-```{r}
-myPlotData <- clustered_files |>
-  filter(cluster==5) |>
-  select(myFiles)
-myPlotData <- sample(myPlotData$myFiles,5)
-
-for (i in myPlotData){
-  im <- load.image(paste(myPath,"/",i,sep=""))
-  plot(im)
-}
-
 ```

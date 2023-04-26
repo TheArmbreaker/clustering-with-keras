@@ -16,26 +16,6 @@ editor: source
 
 ---
 
-```{r libs}
-#| eval: false
-#| freeze: true
-library(butcher)
-
-```
-
-
-```{r helper-functions}
-#| eval: false
-#| freeze: true
-get_time <- function(){
-  myTime <- Sys.time()
-  myTime <- gsub(":","_",myTime)
-  myTime <- gsub(" ","_",myTime)
-  myTime <- gsub("-","_",myTime)
-  return (myTime)
-  }
-```
-
 # Plan
 
 ## Introduction
@@ -111,6 +91,53 @@ Stackoverflow
 The Databricks environment was registered via the community edition link. However it skyrocketed costs at AWS within one night so that the approach had to be canceled.  
 This project is implemented on a Windows Gaming PC for modeling activities and a MacBook for writing code and text. This approach is supported by a Github Repository to exchange files and results.
 
+```{r libs}
+#| eval: false
+#| freeze: true
+library(reticulate)
+library(keras)
+library(tensorflow)
+library(tidyverse)
+library(tidymodels)
+library(tidyclust)
+library(recipes)
+library(butcher)
+library(ggplot2)
+#library(factoextra)
+#library(cluster)
+```
+
+Following code chunk is setting the python environment to use behind the Keras and Tensorflow functions in R.
+
+```{r prepare-env}
+#| eval: false
+#| freeze: true
+use_condaenv("condatascience") # environment on my Windows Machine
+myPy <- py_config()$python
+myPy
+
+```
+
+```{r confirm-tf}
+#| eval: false
+#| freeze: true
+tf$constant("Hello Tensorflow!")
+```
+
+
+```{r helper-functions}
+#| eval: false
+#| freeze: true
+get_time <- function(){
+  myTime <- Sys.time()
+  myTime <- gsub(":","_",myTime)
+  myTime <- gsub(" ","_",myTime)
+  myTime <- gsub("-","_",myTime)
+  return (myTime)
+  }
+```
+
+
 # Data
 
 ## Data Ingestion
@@ -130,7 +157,7 @@ The following code enables to switch between the flowers and weapons dataset, wi
 #| eval: false
 #| freeze: true
 # Switch to toggle between a prototype flower-images and the weapon images to be clustered
-flower_data <- TRUE
+flower_data <- FALSE
 if (flower_data){
   myPath <- "flowers"
   print("Flower Data loaded.")
@@ -181,6 +208,7 @@ In the following code-chunk every image file is processed with above described f
 ```{r extract-features}
 #| eval: false
 #| freeze: true
+#| include: false
 # empty list to hold extracted features per image
 myFeatures <- list()
 
@@ -196,6 +224,11 @@ for (img_file in myFiles){
 
 myFeatArray <- matrix(unlist(myFeatures), ncol=4096, byrow=TRUE) 
 ```
+
+```{r store-features}
+write.csv(myFeatArray,"weapons_featArray.csv")
+```
+
 
 Finally, the extracted features are transformed to a dataframe.
 
@@ -223,7 +256,7 @@ No normalization, because for some vectors the sum is zero and this would yield 
 ```{r pca-code}
 #| eval: false
 #| freeze: true
-img_recipe <- recipe(~.,data=myFeatArray) |>
+img_recipe <- recipe(~.,data=file_features) |>
   step_pca(all_numeric(),num_comp=100)
 ```
 
@@ -231,8 +264,13 @@ img_recipe <- recipe(~.,data=myFeatArray) |>
 
 ## Optimal K
 
-The tidyverse and tidyclus libraries provide a tuning function that works with bootstrapping. However, this is very resource and time consuming and therefore executed with times = 1.
+There is an old thumb rule to predict the amount of clusters. This value will be used as maximum for following tuning function.
 
+```{r old-optimal}
+sqrt(nrow(df_data))
+```
+The tidyverse and tidyclust libraries provide a tuning function that works with bootstrapping or cv-folds.
+Using the standard settings for bootstrapping or cv-folds needs a very long run time. Therefore, not necessarily optimal values are used.  
 Furthermore the workflow function from the recipe library is introduced, which can be used instead of preparation and baking. In this function the recipe and the model are provided to tune_cluster().
 
 ```{r kmean-tuning}
@@ -245,17 +283,49 @@ optK <- k_means() |>
 # generate workflow with preprocessing recipe and model
 optK_wf <- workflow(img_recipe,optK)
 
-# set bootstraps
-boots <- bootstraps(df_data,times=1)
+# set bootstraps or cv-folds
+myBoots <- bootstraps(df_data,times=2)
+# myCVfolds <- vfold_cv(df_data,v=5)
 
+start <- Sys.time()
 # execute cluster tuning and store results
 tune_res <- tune_cluster(
   optK_wf,
-  resample = boots
+  resample = myBoots,
+  metrics = cluster_metric_set(sse_within_total,sse_total,sse_ratio),
+  grid = expand.grid(num_clusters=1:20)
 )
-
+end <- Sys.time()
 # retrieve tuning results
-collect_metrics(tune_res)
+myMetrics <- collect_metrics(tune_res)
+
+print(end-start) # no additional text required for output
+
+```
+
+Square root rule: This rule suggests that the number of clusters should be approximately equal to the square root of the number of data points. So, if you have 100 data points, the square root of 100 is 10, so you could try using 10 clusters.
+
+```{r}
+#| eval: false
+#| freeze: true
+glimpse(myMetrics)
+```
+
+
+```{r kmean-elbow}
+#| eval: false
+#| freeze: true
+
+myMetrics |>
+  filter(.metric == "sse_within_total") |>
+  ggplot(aes(x = num_clusters, y = mean)) +
+  geom_point() +
+  geom_line() +
+  theme_minimal() +
+  ylab("mean WSS") +
+  xlab("Number of clusters") +
+  scale_x_continuous(limits = c(0,20))
+
 ```
 
 ## K-Means - Fit
@@ -267,7 +337,7 @@ After the optimal k was established, the model function can be provided with a n
 #| freeze: true
 # generate k_means function with optimal k value
 km <- k_means() |>
-  set_args(num_clusters=10)
+  set_args(num_clusters=8)
 
 # generate workflow with preprocessing recipe and model
 km_wf <- workflow(img_recipe,km)
