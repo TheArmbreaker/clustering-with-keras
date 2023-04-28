@@ -19,8 +19,6 @@ myKerasModel <- application_vgg16(weights="imagenet",include_top=TRUE)
 output <- myKerasModel$layers[[length(myKerasModel$layers)-1]]$output
 myKerasModel <- keras_model(inputs=myKerasModel$input, outputs=output)
 
-secs <- 1
-
 # Define UI
 ui <- fluidPage(theme = shinytheme("united"),
                 tags$head(
@@ -63,7 +61,7 @@ ui <- fluidPage(theme = shinytheme("united"),
                   tabPanel("Show Clusters", value = "show_cluster",
                            mainPanel(
                              class = "myMainPanel",
-                             h1("Cluster of Weapon Images"),
+                             h1("Examine and label Clusters"),
                              
                              h3("Amount of Image by Cluster"),
                              plotOutput(outputId = "ggplot_cluster")  |> withSpinner(color="#0dc5c1"),
