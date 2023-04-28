@@ -19,6 +19,7 @@ myKerasModel <- application_vgg16(weights="imagenet",include_top=TRUE)
 output <- myKerasModel$layers[[length(myKerasModel$layers)-1]]$output
 myKerasModel <- keras_model(inputs=myKerasModel$input, outputs=output)
 
+secs <- 1
 
 # Define UI
 ui <- fluidPage(theme = shinytheme("united"),
@@ -114,19 +115,19 @@ server <- function(input, output, session) {
   # load data from model results
   df_clusters <- reactive({
     if (input$var_model == "Flowers"){
-      df_clusters <- read.csv("2023_04_20_16_18_27_recipe_clusteredflowers.csv",header=TRUE)
+      df_clusters <- read.csv("noRecipe_flowers.csv",header=TRUE)
     } else if (input$var_model == "Weapons"){
-      df_clusters <- read.csv("2023_04_16_00_32_52_recipe_clusteredweapons.csv",header=TRUE)
+      df_clusters <- read.csv("noRecipe_weapons.csv",header=TRUE)
     } else if (input$var_model == "Flowers_predict"){
-      df_clusters <- read.csv("2023_04_20_16_18_27_recipe_clusteredflowers.csv",header=TRUE)
+      df_clusters <- read.csv("recipe_flowers.csv",header=TRUE)
     } else if (input$var_model == "Weapons_predict") {
-      df_clusters <- read.csv("2023_04_16_00_32_52_recipe_clusteredweapons.csv",header=TRUE)
+      df_clusters <- read.csv("recipe_weapons.csv",header=TRUE)
     }
   })
   
   # extract clusters for selectionInput.
   observe({
-    cluster_vector <- df_clusters() |> select(.cluster)
+    cluster_vector <- df_clusters() |> select(.cluster) |> arrange(as.numeric(sub(".*_", "", .cluster)))
     updateSelectInput(session,"var_clus",choices=cluster_vector,selected=NULL)
   })
 
@@ -137,7 +138,7 @@ server <- function(input, output, session) {
     df_img_files <- df_clusters() |>
       filter(.cluster==myFilter) |>
       select(myFiles)
-    
+
     df_img_sample <- sample(df_img_files$myFiles,4)
     df_img <- data.frame(id = c(1:4), img_path = df_img_sample)
     df_img
@@ -159,7 +160,7 @@ server <- function(input, output, session) {
             )}, deleteFile=FALSE)
       })
     }
-  }, ignoreInit = TRUE)
+    }, ignoreInit = TRUE)
   
   # observe Event for Cluster New Images
   # this renders each image in a separate environment
@@ -203,7 +204,7 @@ server <- function(input, output, session) {
     if (myString == "Flowers"){
       myClusterModel <- readRDS("flowers_cluster.rds")
     } else if (myString == "Weapons") {
-      myClusterModel <- readRDS("weapon_cluster.rds")      
+      myClusterModel <- readRDS("weapons_cluster.rds")      
     }
     else {
       myClusterModel <- NULL
