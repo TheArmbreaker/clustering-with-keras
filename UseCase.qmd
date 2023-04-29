@@ -15,29 +15,117 @@ editor: source
 #fig-cap-location: end
 ---
 
-# Plan
+```{r libs}
+#| eval: false
+#| freeze: true
+library(reticulate)
+library(keras)
+library(tensorflow)
+library(tidyverse)
+library(tidymodels)
+library(tidyclust)
+library(recipes)
+library(jpeg)
+library(butcher)
+library(ggplot2)
+#library(factoextra)
+#library(cluster)
+```
 
-## Introduction
+```{r helper-functions}
+#| eval: false
+#| freeze: true
+get_time <- function(){
+  myTime <- Sys.time()
+  myTime <- gsub(":","_",myTime)
+  myTime <- gsub(" ","_",myTime)
+  myTime <- gsub("-","_",myTime)
+  return (myTime)
+  }
+```
+
+# Introduction
 
 The requirement of self-labeled image data became obvious, when I was researching a project for my masterthesis. I was looking for a way to automatically sort images by their content and found a project from Gabo Flomo on [(towardsdatascience.com: 2020)](https://towardsdatascience.com/how-to-cluster-images-based-on-visual-similarity-cd6e7209fe34), in which flower-images are clustered by similarity.
 
-In this R learning project the python code from Gabo Flomo is used as blueprint. It is translated to R and incorporated to the Data Science Life Cycle.
+In this R learning project the python code from Gabo Flomo is used as blueprint. It is translated to R and incorporated to a Data Science Life Cycle.
+
+To following wording is used to support easier reading and unique notation. When speaking of the flower images dataset, which was originally used by Gabo Flomo, the phrase flower data is used. For the later introduced dataset on weapons in images the phrase weapons data is used. Additionally, the resulting clusters and models are names flower model and weapon model. This is especially important as two different clustering approaches will be compared and for either flower model and weapon model there will be a prediction model. Such prediction models will be named flower prediction model and weapon prediction model.
+
+Overview of names for **flower** and **weapon**
+
+-   *data* refers to dataset.
+-   *model* refers to model of clustering approach in BaseR.
+-   *prediction model* refers to model of clustering in tidyclust and recipe.
+
+## Datasets
+
+The images can be found here:
+
+-   Weapons in Images on [kaggle.com](https://www.kaggle.com/datasets/jubaerad/weapons-in-images-segmented-videos)
+-   Flower Color Images on [kaggle.com](https://www.kaggle.com/datasets/olgabelitskaya/flower-color-images)
+
+To execute the code on a locally run shiny web app the data shall be copied in folders "flowers" and "weapons" of the Rproject folder. From the dataset-downloads the sub folders *flower_images* and *Weapons-in-Images* are required.
+
+## Environment
+
+From experience in past projects it is known that my daily working computer is not able to perform image processing in keras without crashing. Therefore, solutions like Amazon Sagemaker Studio Lab, Databricks Community Edition and Amazon Sagemaker (without Studio Lab) were explored.
+
+While Sagemaker Studio Lab only supported Python, the Amazon Sagemaker solution was promising, despite generating a small amount of costs within the free usage limits of AWS. Unfortunately, loading a pre-trained keras model within an Jupyter Lab environment of Amazon Sagemaker returned twisted input shapes and therefore the code crashed when trying to insert images. Interestingly R instances on local machines would provide a model with correct input-shapes. Thus, an stackoverflow-question was released for clarification of a bug. Please follow the links in the margin for more details.
+
+::: column-margin
+Stackoverflow\
+[1. my Question and my Answer](https://stackoverflow.com/questions/75988301/vgg16-different-shape-between-r-and-python-how-to-deal-with-that)\
+[2. Example Images InputLayer](https://imgur.com/a/5dOaJWf)
+:::
+
+The Databricks environment was registered via the community edition link. However it skyrocketed costs at AWS within one night so that the approach had to be canceled.  
+
+Finally, this project is implemented on a Windows Gaming PC for modeling activities and a MacBook for writing code and text. This approach is supported by a Github Repository to exchange files and results. File sizes that exceed the github limit are exchanged with a GoogleDrive.
+
+::: column-margin
+It is not very joyful having to code and write with a Mac Keyboard Layout on a Windows Machine.
+:::
+
+Following code chunk is setting the python environment to be used by Keras and Tensorflow functions in R.
+
+```{r prepare-env}
+#| eval: false
+#| freeze: true
+use_condaenv("condatascience") # environment on my Windows Machine
+myPy <- py_config()$python
+myPy
+
+```
+
+The following code confirms successful loading of Tensorflow.
+
+```{r confirm-tf}
+#| eval: false
+#| freeze: true
+tf$constant("Hello Tensorflow!")
+```
+
+# Plan
 
 ## Use Case
 
-The thesis subject is going to be about object detection on military personal. For such topics almost no dataset is publicly available. Therefore, datasets without labels or not necessarily relevant images will be used for clustering.
+The thesis subject is going to be about object detection on military personal. For such topics almost no dataset is publicly available. Thus, images from datasets have to be examined and labeled manually.\
+The vast majority and variety of unlabeled images should not be evaluated picture by picture. Instead unsupervised learning with clustering shall be used to support the understanding of the image contents. This might help to sort out irrelevant images for labeling and also to create image-categories.
 
-To provide comparable code the original flower images and images of weapons are used. First the images are provided to a pre-trained keras model with an omitted output layer. This provides a feature matrix with information on image features. On the matrices of all images a principal component analysis is performed and the results are forwarded to kmeans-clustering. The obtained results are mapped to the image files. This enables a shiny web app to load respective images of a cluster. The shiny web app is used as deployment stage in the Data Science Life Cycle.
+## Procedure
 
-Additionally, it shall be mentioned that the coding is based on base functions as well as the tidyverse-package. This enables the utilisation of features which were not found in the respective other package. For example an elbow-curve was plotted with baseR.
+The flower data is used to write working code and navigate any differences in the codeing languages. In a an early protopye Base R code was used for clustering and later transfered to tidyclust and recipe to generate a model for prediction on new images. However, during the transformation differences in the results were noticed and both codes and results kept for evaluation.
+
+The flower and weapon data hold information in form of features which have to be extracted before clustering. This tasks will be done by the pre-trained imagenet-vgg16 model which is available in the keras library. In accordance to the flower data blueprint from Gabo Flomo, the last output layer is omitted and provides 4096 features per image. Those are forwarded to pca and kmeans clustering to support the user's activities of understanding data contents. All resulting clusters and models are deployed in a shiny web app. I would have been possible to evaluate all models before deployment, but the user shall decide which clusters are better and therefore needs access to all results.
 
 ## Anticipated Outcomes
 
-Regarding the anticipated outcomes it is highlighted that the code shall support exploratory activities. The following images are examples from the datasets to support following argumentation.
+Anticipated outcomes for exploratory activities on the flower data are separate clusters for yellow and white flowers. Regarding the weapon data the cluster might separate images of pistols and rifles, which needs a large amount of tinkering. More realistic results are clusters on close weapons, people with weapons, weapons in front of a landscape and camera angles.
 
-For flower images 10 different clusters can be expected. This reflects the plant species labels provided in the dataset description.
+The flower data suggests 10 different clusters by named species in the dataset description. For the weapon data the amount of clusters is unknown and will be selected based on an elbow-curve.
 
-For weapon images an unknown amount of clusters can be expected. The optimal k will be calculated in the Data section. However, the objective is to sort the image files by some degree to simplify any manual label activities. For example it is imagined that images of rifles and pistols are in separate clusters. In this context it is important to consider that other image features will influence the cluster as well. Such superior influences can be people holding a weapon, different camera angles in the image and so on.
+Following example images show that all flower images are made in close range, while weapon data has a large variety of objects, like soldiers, toys, persons aiming, persons not aiming, vehicles and landscapes.
 
 ::: {#fig-flowers layout-nrow="2" style="text-align:center;"}
 ![Example 1](flowers/0001.png)
@@ -63,90 +151,19 @@ Example Images Flowers
 Example Images Weapons
 :::
 
-## Datasets
-
-The images can be found here:
-
--   Weapons in Images on [kaggle.com](https://www.kaggle.com/datasets/jubaerad/weapons-in-images-segmented-videos)
--   Flower Color Images on [kaggle.com](https://www.kaggle.com/datasets/olgabelitskaya/flower-color-images)
-
-To execute the code and the shiny web app the data shall be copied in folders "flowers" and "weapons" in the Rproject folder.\
-For flowers use the images in the subfolder "flower_images" and for weapons the subfolder "Weapons-in-Images" in the download files.
-
-## Environment
-
-From experience in past projects it is known that my daily working computer is not able to perform image processing in keras without crashing. Therefore, solutions like Amazon Sagemaker Studio Lab, Databricks Community Edition and Amazon Sagemaker (without Studio Lab) were explored.
-
-While Sagemaker Studio Lab only supported Python, the Amazon Sagemaker solution was promising, despite generating a small amount of costs within the free usage limits of AWS. Unfortunately, loading a pre-trained keras model within an Jupyter Lab environment of Amazon Sagemaker returned twisted input shapes and therefore the code crashed when trying to insert images. Interestingly an R instance on local machines would provide a model with correct input-shapes. Thus, an stackoverflow-question was released for clarification of a bug.
-
-::: column-margin
-Stackoverflow\
-[1. my Question and my Answer](https://stackoverflow.com/questions/75988301/vgg16-different-shape-between-r-and-python-how-to-deal-with-that)\
-[2. Example Images InputLayer](https://imgur.com/a/5dOaJWf)
-:::
-
-The Databricks environment was registered via the community edition link. However it skyrocketed costs at AWS within one night so that the approach had to be canceled.\
-This project is implemented on a Windows Gaming PC for modeling activities and a MacBook for writing code and text. This approach is supported by a Github Repository to exchange files and results.
-
-```{r libs}
-#| eval: false
-#| freeze: true
-library(reticulate)
-library(keras)
-library(tensorflow)
-library(tidyverse)
-library(tidymodels)
-library(tidyclust)
-library(recipes)
-library(jpeg)
-library(butcher)
-library(ggplot2)
-#library(factoextra)
-#library(cluster)
-```
-
-Following code chunk is setting the python environment to use behind the Keras and Tensorflow functions in R.
-
-```{r prepare-env}
-#| eval: false
-#| freeze: true
-use_condaenv("condatascience") # environment on my Windows Machine
-myPy <- py_config()$python
-myPy
-
-```
-
-```{r confirm-tf}
-#| eval: false
-#| freeze: true
-tf$constant("Hello Tensorflow!")
-```
-
-```{r helper-functions}
-#| eval: false
-#| freeze: true
-get_time <- function(){
-  myTime <- Sys.time()
-  myTime <- gsub(":","_",myTime)
-  myTime <- gsub(" ","_",myTime)
-  myTime <- gsub("-","_",myTime)
-  return (myTime)
-  }
-```
-
 # Data
 
 ## Data Ingestion
 
-This project performs two different approaches on each of the introduced datasets. Thus, in the deployment phase four different models will be provided for the User's comparision. This approach holds some conflicting libraries or duplicated steps. While this page focuses on the code for tidyverse, tidyclus, recipe package, there is another simplified file with code in BaseR.
+To prevent conflicts in the loaded libraries the above mentioned Base R approach is provided in another document, which is linked in the margin column on the right. This document focuses on the approach with tidyverse, tidyclust and recipe. 
 
 ::: column-margin
 Link to BaseR Code [Link](clustering_code.qmd)
 :::
 
-The following approach will result in a pipeline, which can be used for deployment and prediction. The BaseR code will not use a pipeline or prediction function and only provides results for the datasets. However, those results will also be used in deployment to search differences in the PCA of tidyverse and BaseR.
+The following approach will result in a pipeline, which can be used for deployment and prediction. The Base R code will not use a pipeline or prediction function and only provides results for the clusters.
 
-The following code enables to switch between the flowers and weapons dataset, without changing other code chunks in the process.
+The following code enables to switch between the flowers and weapons data, without changing other code chunks in the later process.
 
 ```{r}
 #| eval: false
@@ -164,15 +181,28 @@ if (flower_data){
 myFiles <- list.files(myPath)
 ```
 
+## Data Split
 
-## Data
+The data will not be splitted for this unsupervised model training with subjective evaluation by the user.
+
+A split of data at any point in this project would prevent overfitting in the model. However, in this rare Use Case and for the given data such overfitting is wanted for most uniqueness in clusters. However, this is not appropriate for the prediction on new images.
+
+By *any point* it is meant that splits are neither performed on images, feature-arrays and principal components.
+
+## Data Analysis
+
+Before the features are extracted a feeling for the files themselves shall be developed. Therefore the dimensions for each image are plotted. Images with less than 840px in each dimension are labeled as small and other images as large.
+
+The following plot shows the width and height in an xy-plot with colored labels. The black lines show the median-value for the respective dimension. The blue line is showing a ratio of 1 between x and y.\
+The plot shows that a lot of pictures have 1024px on at least one dimension and smaller size on the other. Looking at the median value of x it can be seen that this is larger than 1024. This is because of overlaps in the plot. In comparison to all pictures there is high amount of pictures having a width of 1280px.
 
 ```{r data-exploration}
-
+#| eval: false
+#| freeze: true
 get_num_pixels <- function(filepath) {
   img <- readJPEG(filepath)
-  width <- as.numeric(dim(img)[2])
-  height <- as.numeric(dim(img)[1])
+  width <- dim(img)[2]
+  height <- dim(img)[1]
   return(list(width = width, height = height))
 }
 
@@ -210,18 +240,21 @@ ggplot(myDF, aes(x,y,colour=z)) +
 
 ```
 
-```{r}
-summary(myDF)
-```
-
+Following statements support the discussed overlap for images haveing a width equal to 1280px. There are more than two thousand images with width 1280. Note that only the x-axis is counted, because a fixed width of 1280 still has different sizes in height.
 
 ```{r}
 myDF |> count(x,y) |> arrange(desc(n)) |> top_n(3,n)
 ```
 
+Finally, a quick overview on statistics. Those confirm the plotted median-values and also show the mean being a bit smaller than the median.
+
+```{r}
+summary(myDF)
+```
+
 ## Feature Extraction
 
-At the beginning the images are prepared for feature extraction. The following code-chunk is based on keras-functions to load an image, transform it to an array that is suitable for the pretrained model and the prediction is performed for that image. The code returns the features of the model.
+To extract features for clustering the following code-chunk is based on keras-functions to load an image, transform it to an array that is suitable for the pretrained model and the prediction is performed for that image. The code returns the features of the image.
 
 ```{r feature-extract}
 #| eval: false
@@ -241,7 +274,11 @@ get_features <- function(image_file,myModel){
 }
 ```
 
-In the code-chunk above the pre-trained model is provided as argument. This enables changing the model for later improvement. The following code-chunk is loading the pre-trained model VGG16 from the keras library. Note, that the output layer is transformed to omit the actual output layer. Thus, the output is now the second last layer and will provide features as a matrix instead of classification labels.
+::: column-margin
+Note that for some reason in R it is image_load() while in python it is img_load().
+:::
+
+In the code-chunk above the pre-trained model is provided as argument. This enables changing the model for later improvement and testing other models - target_size has to be adjusted manually or programed as argument. The following code-chunk is loading the pre-trained model VGG16 from the keras library. Note, that the output layer is omitted and therefore the second last layer will provide features as tensor instead of classification result.
 
 ```{r load-keras-vgg16}
 #| eval: false
@@ -253,7 +290,7 @@ output <- model$layers[[length(model$layers)-1]]$output
 model <- keras_model(inputs=model$input, outputs=output)
 ```
 
-In the following code-chunk every image file is processed with above described function to populate a list features and transform it to an Array with 4096 features per row (image).
+In the following code-chunk every image file is processed with above described function to populate a list of features and transform it to an matrix with 4096 features per row.
 
 ```{r extract-features}
 #| eval: false
@@ -272,11 +309,8 @@ for (img_file in myFiles){
   myFeatures[[len+1]]<-feat
 }
 
-myFeatArray <- matrix(unlist(myFeatures), ncol=4096, byrow=TRUE) 
-```
-
-```{r store-features}
-write.csv(myFeatArray,"weapons_featArray.csv")
+myFeatArray <- matrix(unlist(myFeatures), ncol=4096, byrow=TRUE)
+dim(myFeatArray)
 ```
 
 Finally, the extracted features are transformed to a dataframe.
@@ -296,9 +330,9 @@ df_data <- bind_cols(file_names,file_features)
 
 ## Feature Engineering
 
-To reduce the amount of features per image. PCA is applied to reduce the dataset to 100 components per image. This value is based on the blueprint from flower clustering, however it holds potential for later optimization in an ML workflow.
+The 4096 features per images are reduced with principal component analysis. The blueprint value of 100 components is used and might be adjusted for model improvements.
 
-The code below creates an recipe with the single pca_step. No normalization, because for some vectors the sum is zero and this would yield an error for division by zero.
+The code below creates a recipe with a single pca_step. A normalisation was not applied, because for some vectors the sum is zero and this would yield an error for division by zero. The omittance of normalisation is supported by the logic of image representation in arrays, which is already using a common scale for RGB-Value representation.
 
 ```{r pca-code}
 #| eval: false
@@ -311,13 +345,15 @@ img_recipe <- recipe(~.,data=file_features) |>
 
 ## Optimal K
 
-There is an old thumb rule to predict the amount of clusters. This value will be used as maximum for following tuning function.
+Before clustering with the pca-results, the amount of clusters are set. There is an old thumb rule called square-root-rule,to predict the amount of clusters, which is not very precise for large amount of data scientist observe today, but it can be used to set a range for the elbow curve. Thus, this value could be used as maximum for the following tuning function.
 
-```{r old-optimal}
+```{r old-optimal-k}
 sqrt(nrow(df_data))
 ```
 
-The tidyverse and tidyclust libraries provide a tuning function that works with bootstrapping or cv-folds. Using the standard settings for bootstrapping or cv-folds needs a very long run time. Therefore, not necessarily optimal values are used.\
+The tidyverse and tidyclust libraries provide a tuning function that works with evaluation functions like bootstrapping or cv-folds.  
+CV-folds is not used to achieve the wanted over fit on training data. Bootstrapping is used as applicable evaluation method. It generates a sample data in the size of original data by taking samples with replacement. The times argument is deciding how often this happens. However, using the standard settings for bootstrapping requires a very long run time. Therefore, not necessarily optimal values in *times* are used for this project.
+
 Furthermore the workflow function from the recipe library is introduced, which can be used instead of preparation and baking. In this function the recipe and the model are provided to tune_cluster().
 
 ```{r kmean-tuning}
@@ -350,13 +386,10 @@ print(end-start) # no additional text required for output
 
 ```
 
-Square root rule: This rule suggests that the number of clusters should be approximately equal to the square root of the number of data points. So, if you have 100 data points, the square root of 100 is 10, so you could try using 10 clusters.
+::: column-margin
+tune_cluster() with cvfold and bootstrapping is shown for completeness of the R learning project.
+:::
 
-```{r}
-#| eval: false
-#| freeze: true
-glimpse(myMetrics)
-```
 
 ```{r kmean-elbow}
 #| eval: false
@@ -422,7 +455,12 @@ saveRDS(km_fit, paste(myfilepath,".rds",sep=""))
 ```
 
 The stored model has a very large file-size, especially for the weapons-model. This file size was in conflict with github's storage limits. Other options like h5-files and deployment with APIs were investigated. The h5-files did not work probably, the API solution with ventier did not ease the file size problem.\
-However, the butcher-library can be used to reduce the fitted model to essentials. The following code-chunks show that vital parts of the model are within ... . Unfortunately for the size, those components were not removed with butcher.
+However, the butcher-library can be used to reduce the fitted model to essentials. The following code-chunks show that vital parts of the model are within ... . Unfortunately regarding the size, those components were not removed with butcher. The saved RDS-file is exchanged with GoogleDrive.
+
+::: column-margin
+RDS-files:
+[GoogleDrive](https://drive.google.com/drive/folders/1LQ2Ixx4rwxcAW8TQPocOXQnUKcDCvBSE?usp=sharing)
+:::
 
 ```{r butcher-model-one}
 #| eval: false
@@ -439,13 +477,22 @@ weigh(stripped_model)
 
 ## Shiny Web App
 
-This part covers the model-deployment in a shiny web app. For details on the code behind the app, please click on the technical documentation link in the right margin. The app is deployed on shineable.io.
+This part covers the model-deployment in a shiny web app. For details on the code behind the app, please click on the technical documentation link in the right margin. The app is deployed on shineapps.io.
 
 ::: column-margin
 Links to:\
 [Shiny App](http://www.google.com)\
 [Shiny TecDoc](http://www.bing.com)
 :::
+
+```{r shinyapps-deployment}
+# install.packages('rsconnect')
+library(rsconnect)
+# rsconnect::setAccountInfo(name='thearmbreaker', token='TOKEN', secret='SECRET')
+
+```
+
+## Description Web App
 
 In the section "Show Clusters" of the app a bar graph shows the amount of images per cluster for one of the four models. To evaluate the results (similarity of images in clusters) in a heuristic manner, four random images are displayed when a specific cluster is activated.
 
@@ -478,18 +525,18 @@ With the deployed app, the unsupervised clustering algorithm can conveniently be
 
 Regarding both models of the flower images one can speak about success. However, the dataset description suggested 10 clusters by the labeled species. In comparision of the barplots for flowers and flowers_predict it is visible that flowers_predicts has a very high amount of pictures in Cluster_1. In flowers the images are more evenly spreaded over the clusters.
 
-For the weapon-images different amount of clusters where used. The weapons model shows more evenly spreaded amount of images per cluster. The weapons_predict shows evenly spreaded amount of images over clusters 2,3,4,6,7 and 8. But Cluster 1 and 5 are rather large and unspecific.  
-The clusters do not distinguish between pistols or rifles, but the enable the distinction of images with people aiming with a rifle, camera footage, groups of people or other scenic photographs. This can be seen as success to sort out irrelevant images for labeling.  
+For the weapon-images different amount of clusters where used. The weapons model shows more evenly spreaded amount of images per cluster. The weapons_predict shows evenly spreaded amount of images over clusters 2,3,4,6,7 and 8. But Cluster 1 and 5 are rather large and unspecific.\
+The clusters do not distinguish between pistols or rifles, but the enable the distinction of images with people aiming with a rifle, camera footage, groups of people or other scenic photographs. This can be seen as success to sort out irrelevant images for labeling.\
 However, in comparison to the relative clean flower dataset the weapon dataset was very indistinct. Therefore, more clusters or other feature extraction approaches might be useful in the model. Last but not least, another amount of PCA could be reviewed for both datasets.
 
 # Outlook
 
 This project could be improved or further developed. There is potential in the implementation of MLflow to track improvements in PCA, k-means or feature extraction with keras.
 
-- Using an earlier outputlayer in the pre-trained Keras model could result in more distinct features for helmets, pistols, rifles, and similar items.
-- Improvements of PCA or K-Means might be tracked with MLflow
-- Uploaded images could be stored in a bucket and used for new clustering training
-- Batch-processing for multiple images with User Upload
+-   Using an earlier outputlayer in the pre-trained Keras model could result in more distinct features for helmets, pistols, rifles, and similar items.
+-   Improvements of PCA or K-Means might be tracked with MLflow
+-   Uploaded images could be stored in a bucket and used for new clustering training (introduce retrain-triggers)
+-   Batch-processing for multiple images with User Upload
 
-Finally, minor technical issues could be addressed. The shiny app uses SelectInput in the UI, which has poor performance by the large amount of clusters. A better approach might be the selectizeInput function which is used on the Server side of the app.  
+Finally, minor technical issues could be addressed. The shiny app uses SelectInput in the UI, which has poor performance by the large amount of clusters. A better approach might be the selectizeInput function which is used on the Server side of the app.\
 Currently, the app generates warnings when loading trained clusters while displaying pictures for a cluster that is not included in the loaded cluster.
