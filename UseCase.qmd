@@ -444,8 +444,8 @@ The model shall also be used for clustering of new images with the predict()-fun
 saveRDS(km_fit, paste(myfilepath,".rds",sep=""))
 ```
 
-The stored model has a very large file-size, especially for the weapons-model. This file size was in conflict with github's storage limits. Other options like h5-files and deployment with APIs were investigated. The h5-files did not work probably, the API solution with ventier did not ease the file size problem.\
-However, the butcher-library can be used to reduce the fitted model to essentials. The following code-chunks show that vital parts of the model are within ... . Unfortunately regarding the size, those components were not removed with butcher. The saved RDS-file is exchanged with GoogleDrive.
+The stored model has a very large file-size, especially for the weapons-model. This file size is in conflict with github's push limits. Other options like h5-files and deployment with APIs were investigated. The h5-files did not work probably, the API solution with ventier did not ease the file size problem.\
+However, the butcher-library can be used to reduce the fitted model to essentials. The following code-chunks show that vital parts of the model are within *pre...recipe.steps.res.rotation* with 135 MiB. Unfortunately regarding the size, those components are not removed with butcher. Therefore, the saved RDS-file is exchanged with GoogleDrive.
 
 :::: column-margin
 ::: {.callout-note}
@@ -560,14 +560,4 @@ This project could be improved or further developed. There is potential in the i
 -   Load image data from bucket or googledrive. For example with the googledrive library which is part of tidyverse.
 
 Finally, minor technical issues could be addressed. The shiny app uses SelectInput in the UI, which has poor performance by the large amount of clusters. A better approach might be the selectizeInput function which is used on the Server side of the app.\
-Currently, the app generates warnings when loading trained clusters while displaying pictures for a cluster that is not included in the loaded cluster.
-
-# Notes
-
-## Final Phase Discoveries {#fpd}
-
-In the last retraining it was noticed that tidyverse has a special k_means() function for text analysis. This might be the reason for different results while building the project. kmeans() is part of the stats package used in both approaches - after changing the code.  
-Therefore, either the tidyverse and the Base R code approach might have similar results. Behind step_pca() of the recipe library the prcomp() is used. prcomp() is a function from the stats package that also provides kmeans().
-
-**Why the Base R code was continued:**\
-As this was as finding of the final phase and a rather sophisticated shiny app already established, the two approaches are continued to keep the R code for project submission.
+Currently, the app generates warnings when loading trained clusters while displaying pictures for a cluster that is not included in the loaded cluster. For example one result having only 8 clusters and another 10 clusters. Those warnings do not crash the app, but should be avoided. Furthermore this might enable more clusters, when needed due to tuning.
