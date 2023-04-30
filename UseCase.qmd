@@ -485,12 +485,37 @@ Links to:\
 [Shiny TecDoc](http://www.bing.com)
 :::
 
+```{r create-bundle}
+myBundle <- c()
+for (i in list.files()) {
+  file_format <- strsplit(i,"\\.")[[1]][2]
+  if (file_format %in% c("rds","csv","html","R") | ( is.na(file_format) & (i != "old_results" & i != "rsconnect"))) {
+    myBundle <- c(myBundle,i)
+  } else {
+  }
+}
+myBundle
+```
+
+
+
 ```{r shinyapps-deployment}
 # install.packages('rsconnect')
-library(rsconnect)
 # rsconnect::setAccountInfo(name='thearmbreaker', token='TOKEN', secret='SECRET')
 
+deployApp(
+  appFiles = myBundle,
+  appName = "clustering-with-keras",
+  upload = TRUE,
+  logLevel = "verbose"
+  )
+#configureApp("app_ImageClustering",size="large")
 ```
+
+```{r}
+terminateApp("app_ImageClustering")
+```
+
 
 ## Description Web App
 

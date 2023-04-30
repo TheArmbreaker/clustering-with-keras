@@ -11,7 +11,16 @@
 # https://shiny.rstudio.com/articles/reactivity-overview.html
 
 # Load required R packages
-lapply(c("shiny", "shinythemes","shinycssloaders", "tidyverse", "keras", "recipes","tidyclust"), require, character.only = TRUE)
+
+library(shiny)
+library(shinythemes)
+library(shinycssloaders)
+library(tidyverse)
+library(keras)
+library(recipes)
+library(tidyclust)
+
+# lapply(c("shiny", "shinythemes","shinycssloaders", "tidyverse", "keras", "recipes","tidyclust"), require, character.only = TRUE)
 
 # Load model from keras
 myKerasModel <- application_vgg16(weights="imagenet",include_top=TRUE)
