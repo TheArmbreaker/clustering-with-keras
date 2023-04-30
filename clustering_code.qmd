@@ -9,7 +9,8 @@ This document shows Base R code for the R learning project. If there are any dif
 ## Environment Preparation
 
 ```{r}
-#| output: false
+#| eval: false
+#| freeze: true
 library(reticulate)
 library(keras)
 library(tensorflow)
@@ -20,16 +21,22 @@ library(cluster)
 ```
 
 ```{r}
+#| eval: false
+#| freeze: true
 use_condaenv("condatascience") # on my windows machine
 myPy <- py_config()$python
 myPy
 ```
 
 ```{r}
+#| eval: false
+#| freeze: true
 tf$constant("Hello Tensorflow!")
 ```
 
 ```{r}
+#| eval: false
+#| freeze: true
 get_time <- function(){
   # returns time-string without special characters
   myTime <- Sys.time()
@@ -43,6 +50,8 @@ get_time <- function(){
 ## Keras and image feature extraction
 
 ```{r}
+#| eval: false
+#| freeze: true
 get_features <- function(image_file,myModel){
   # takes: image file and model
   # returns: feature vector for the provided image
@@ -59,6 +68,8 @@ get_features <- function(image_file,myModel){
 ```
 
 ```{r}
+#| eval: false
+#| freeze: true
 # Load model
 model <- application_vgg16(weights="imagenet",include_top=TRUE)
 # Change Output to second last layer to access the feature map instead of classification result.
@@ -67,8 +78,10 @@ model <- keras_model(inputs=model$input, outputs=output)
 ```
 
 ```{r}
+#| eval: false
+#| freeze: true
 # Switch to toggle between a prototype flower-images and the actual images to be clustered
-flower_data <- TRUE
+flower_data <- FALSE
 if (flower_data){
   myPath <- "flowers"
   print("Flower Data loaded.")
@@ -81,9 +94,8 @@ myFiles <- list.files(myPath)
 ```
 
 ```{r}
-#| output: false
 #| eval: false
-#| include: false
+#| freeze: true
 # empty list to hold extracted features per image
 myFeatures <- list()
 
@@ -100,23 +112,26 @@ for (img_file in myFiles){
 x <- matrix(unlist(myFeatures), ncol=4096, byrow=TRUE) 
 ```
 
-After the the matrix is created. There are 4375 images with 4096 variables each.
-
 ```{r}
-# x <- array(unlist(myFeatures),dim=c(length(myFeatures),length(myFeatures[[1]])))
+#| eval: false
+#| freeze: true
 dim(x)
 ```
 
 ## PCA
 
-In comparision to the recipe the pca analysis is performed with prcomp(). According to statology the eigenvectors should be multiplied by -1.  
+In comparison to the recipe the pca analysis is performed with prcomp(). According to [Statology.org (2020)](https://www.statology.org/principal-components-analysis-in-r/) the eigenvectors should be multiplied by -1, because R eigenvectors are negative by default.
 
 ```{r}
+#| eval: false
+#| freeze: true
 pca_res <- prcomp(x,rank=100)
 pca_res$x <- -1*pca_res$x
 ```
 
 ```{r}
+#| eval: false
+#| freeze: true
 # transform myFiles list to a single column dataframe
 file_names <- as.data.frame(myFiles)
   
@@ -130,22 +145,25 @@ df_pca <- bind_cols(file_names,file_features)
 write_csv(df_pca,paste(get_time(),"_","pcaResults_",myPath,".csv",sep=""))
 ```
 
-The prcomp() output can be used to plot the elbow curve. There is a special library called factoextra for this.
+The output can be used to plot the elbow curve. There is a special library called factoextra for this.
 
 ```{r}
+#| eval: false
+#| freeze: true
 fviz_nbclust(file_features,kmeans,method="wss",k.max=66)
 ```
 
 ## Clustering
 
-The standard kmeans() function is used instead of fitting and preprocessing.
-Afterwards cluster-assignments are extracted and mapped to the file-names.
-
 ```{r}
+#| eval: false
+#| freeze: true
 km <- kmeans(pca_res$x,centers=10,nstart=3)
 ```
 
 ```{r}
+#| eval: false
+#| freeze: true
 # map cluster and file_name
 clusters <- as.data.frame(km[1])
 clusters <- clusters |>
@@ -159,8 +177,10 @@ clustered_files
 write_csv(clustered_files,paste("noRecipe_",myPath,"_",get_time(),"_","cluster.csv",sep=""))
 ```
 
-The kmeans object provide further arguments to receive details like the cluster assignments, but also the cluster sizes.
+The kmeans object provides further arguments to receive details like the cluster assignments, but also the cluster sizes.
 
 ```{r}
+#| eval: false
+#| freeze: true
 km$size
 ```

@@ -6,8 +6,8 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
-<meta name="author" content="">
-<meta name="dcterms.date" content="2023-04-23">
+<meta name="author" content="Markus Armbrecht">
+<meta name="dcterms.date" content="2023-04-30">
 
 <title>Image Clustering in R</title>
 <style>
@@ -104,23 +104,28 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 
 <body>
 
-<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
-<div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article toc-left">
+<div id="quarto-sidebar-toc-left" class="sidebar toc-left">
   <nav id="TOC" role="doc-toc" class="toc-active">
     <h2 id="toc-title">Image Clustering in R</h2>
    
   <ul>
-  <li><a href="#plan" id="toc-plan" class="nav-link active" data-scroll-target="#plan">Plan</a>
+  <li><a href="#introduction" id="toc-introduction" class="nav-link active" data-scroll-target="#introduction">Introduction</a>
   <ul class="collapse">
-  <li><a href="#introduction" id="toc-introduction" class="nav-link" data-scroll-target="#introduction">Introduction</a></li>
-  <li><a href="#use-case" id="toc-use-case" class="nav-link" data-scroll-target="#use-case">Use Case</a></li>
-  <li><a href="#anticipated-outcomes" id="toc-anticipated-outcomes" class="nav-link" data-scroll-target="#anticipated-outcomes">Anticipated Outcomes</a></li>
   <li><a href="#datasets" id="toc-datasets" class="nav-link" data-scroll-target="#datasets">Datasets</a></li>
   <li><a href="#environment" id="toc-environment" class="nav-link" data-scroll-target="#environment">Environment</a></li>
+  </ul></li>
+  <li><a href="#plan" id="toc-plan" class="nav-link" data-scroll-target="#plan">Plan</a>
+  <ul class="collapse">
+  <li><a href="#use-case" id="toc-use-case" class="nav-link" data-scroll-target="#use-case">Use Case</a></li>
+  <li><a href="#procedure" id="toc-procedure" class="nav-link" data-scroll-target="#procedure">Procedure</a></li>
+  <li><a href="#anticipated-outcomes" id="toc-anticipated-outcomes" class="nav-link" data-scroll-target="#anticipated-outcomes">Anticipated Outcomes</a></li>
   </ul></li>
   <li><a href="#data" id="toc-data" class="nav-link" data-scroll-target="#data">Data</a>
   <ul class="collapse">
   <li><a href="#data-ingestion" id="toc-data-ingestion" class="nav-link" data-scroll-target="#data-ingestion">Data Ingestion</a></li>
+  <li><a href="#data-split" id="toc-data-split" class="nav-link" data-scroll-target="#data-split">Data Split</a></li>
+  <li><a href="#data-analysis" id="toc-data-analysis" class="nav-link" data-scroll-target="#data-analysis">Data Analysis</a></li>
   <li><a href="#feature-extraction" id="toc-feature-extraction" class="nav-link" data-scroll-target="#feature-extraction">Feature Extraction</a></li>
   <li><a href="#feature-engineering" id="toc-feature-engineering" class="nav-link" data-scroll-target="#feature-engineering">Feature Engineering</a></li>
   </ul></li>
@@ -133,10 +138,18 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
   <ul class="collapse">
   <li><a href="#extraction" id="toc-extraction" class="nav-link" data-scroll-target="#extraction">Extraction</a></li>
   <li><a href="#shiny-web-app" id="toc-shiny-web-app" class="nav-link" data-scroll-target="#shiny-web-app">Shiny Web App</a></li>
+  <li><a href="#description-of-app" id="toc-description-of-app" class="nav-link" data-scroll-target="#description-of-app">Description of App</a></li>
+  <li><a href="#interpreting-results-with-app" id="toc-interpreting-results-with-app" class="nav-link" data-scroll-target="#interpreting-results-with-app">Interpreting Results with App</a></li>
   </ul></li>
   <li><a href="#outlook" id="toc-outlook" class="nav-link" data-scroll-target="#outlook">Outlook</a></li>
+  <li><a href="#notes" id="toc-notes" class="nav-link" data-scroll-target="#notes">Notes</a>
+  <ul class="collapse">
+  <li><a href="#fpd" id="toc-fpd" class="nav-link" data-scroll-target="#fpd">Final Phase Discoveries</a></li>
+  </ul></li>
   </ul>
 </nav>
+</div>
+<div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
 </div>
 <main class="content page-columns page-full" id="quarto-document-content">
 
@@ -153,14 +166,14 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
     <div>
     <div class="quarto-title-meta-heading">Author</div>
     <div class="quarto-title-meta-contents">
-             <p><a href="https://github.com/TheArmbreaker" target="_blank"><img src="https://img.shields.io/badge/Github-Markus%20Armbrecht-orange" alt="Github Markus Armbrecht"></a> </p>
+             <p>Markus Armbrecht </p>
           </div>
   </div>
     
     <div>
     <div class="quarto-title-meta-heading">Published</div>
     <div class="quarto-title-meta-contents">
-      <p class="date">April 23, 2023</p>
+      <p class="date">April 30, 2023</p>
     </div>
   </div>
   
@@ -170,36 +183,74 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 
 </header>
 
+<section id="introduction" class="level1 page-columns page-full">
+<h1>Introduction</h1>
+<p>The requirement of self-labeled image data became obvious, when I was researching a project for my masterthesis. I was looking for a way to automatically sort images by their content and found a project from Gabo Flomo on <a href="https://towardsdatascience.com/how-to-cluster-images-based-on-visual-similarity-cd6e7209fe34">(towardsdatascience.com: 2020)</a>, in which flower-images are clustered by similarity.</p>
+<p>In this R learning project the python code from Gabo Flomo is used as blueprint. It is translated to R and incorporated to a Data Science Life Cycle.</p>
+
+<div class="no-row-height column-margin column-container"><div class="">
+<p><strong>Link</strong><br>
+<a href="https://github.com/TheArmbreaker/clustering-with-keras">GitHub Repo</a></p>
+</div></div><p>To following wording is used to support easier reading and unique notation. When speaking of the flower images dataset, which was originally used by Gabo Flomo, the phrase flower data is used. For the later introduced dataset on weapons in images the phrase weapons data is used. Additionally, the resulting clusters and models are names flower model and weapon model. This is especially important as two different clustering approaches will be compared and for either flower model and weapon model there will be a prediction model. Such prediction models will be named flower prediction model and weapon prediction model.</p>
+<p>Overview of names for <strong>flower</strong> and <strong>weapon</strong></p>
+<ul>
+<li><em>data</em> refers to dataset.</li>
+<li><em>model</em> refers to model of clustering approach in BaseR.</li>
+<li><em>prediction model</em> refers to model of clustering in tidyclust and recipe.</li>
+</ul>
+<section id="datasets" class="level2">
+<h2 class="anchored" data-anchor-id="datasets">Datasets</h2>
+<p>The images can be found here:</p>
+<ul>
+<li>Weapons in Images on <a href="https://www.kaggle.com/datasets/jubaerad/weapons-in-images-segmented-videos">kaggle.com</a></li>
+<li>Flower Color Images on <a href="https://www.kaggle.com/datasets/olgabelitskaya/flower-color-images">kaggle.com</a></li>
+</ul>
+<p>To execute the code on a locally run shiny web app the data shall be copied in folders “flowers” and “weapons” of the Rproject folder. From the dataset-downloads the sub folders <em>flower_images</em> and <em>Weapons-in-Images</em> are required.</p>
+</section>
+<section id="environment" class="level2 page-columns page-full">
+<h2 class="anchored" data-anchor-id="environment">Environment</h2>
+<p>From experience in past projects it is known that my daily working computer is not able to perform image processing in keras without crashing. Therefore, solutions like Amazon Sagemaker Studio Lab, Databricks Community Edition and Amazon Sagemaker (without Studio Lab) were explored.</p>
+<p>While Sagemaker Studio Lab only supported Python, the Amazon Sagemaker solution was promising, despite generating a small amount of costs within the free usage limits of AWS. Unfortunately, loading a pre-trained keras model within an Jupyter Lab environment of Amazon Sagemaker returned twisted input shapes and therefore the code crashed when trying to insert images. Interestingly R instances on local machines would provide a model with correct input-shapes. Thus, an stackoverflow-question was released for clarification of a bug. Please follow the links in the margin for more details.</p>
+
+<div class="no-row-height column-margin column-container"><div class="">
+<p><strong>Stackoverflow</strong><br>
+<a href="https://stackoverflow.com/questions/75988301/vgg16-different-shape-between-r-and-python-how-to-deal-with-that">1. my Question and my Answer</a><br>
+<a href="https://imgur.com/a/5dOaJWf">2. Example Images InputLayer</a></p>
+</div></div><p>The Databricks environment was registered via the community edition link. However it skyrocketed costs at AWS within one night so that the approach had to be canceled.</p>
+<p>Finally, this project is implemented on a Windows Gaming PC for modeling activities and a MacBook for writing code and text. This approach is supported by a Github Repository to exchange files and results. File sizes that exceed the github limit are exchanged with a GoogleDrive.</p>
+<p>Following code chunk is setting the python environment to be used by Keras and Tensorflow functions in R.</p>
 <div class="cell" data-freeze="true">
-<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(butcher)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">use_condaenv</span>(<span class="st">"condatascience"</span>) <span class="co"># environment on my Windows Machine</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>myPy <span class="ot">&lt;-</span> <span class="fu">py_config</span>()<span class="sc">$</span>python</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>myPy</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
+<p>The following code confirms successful loading of Tensorflow.</p>
 <div class="cell" data-freeze="true">
-<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>get_time <span class="ot">&lt;-</span> <span class="cf">function</span>(){</span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  myTime <span class="ot">&lt;-</span> <span class="fu">Sys.time</span>()</span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  myTime <span class="ot">&lt;-</span> <span class="fu">gsub</span>(<span class="st">":"</span>,<span class="st">"_"</span>,myTime)</span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  myTime <span class="ot">&lt;-</span> <span class="fu">gsub</span>(<span class="st">" "</span>,<span class="st">"_"</span>,myTime)</span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  myTime <span class="ot">&lt;-</span> <span class="fu">gsub</span>(<span class="st">"-"</span>,<span class="st">"_"</span>,myTime)</span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span> (myTime)</span>
-<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>  }</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>tf<span class="sc">$</span><span class="fu">constant</span>(<span class="st">"Hello Tensorflow!"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
+</section>
+</section>
 <section id="plan" class="level1 page-columns page-full">
 <h1>Plan</h1>
-<section id="introduction" class="level2">
-<h2 class="anchored" data-anchor-id="introduction">Introduction</h2>
-<p>The requirement of self-labeled image data became obvious, when I was researching a project for my masterthesis. I was looking for a way to automatically sort images by their content and found a project from Gabo Flomo on <a href="https://towardsdatascience.com/how-to-cluster-images-based-on-visual-similarity-cd6e7209fe34">(towardsdatascience.com: 2020)</a>, in which flower-images are clustered by similarity.</p>
-<p>In this R learning project the python code from Gabo Flomo is used as blueprint. It is translated to R and incorporated to the Data Science Life Cycle.</p>
-</section>
 <section id="use-case" class="level2">
 <h2 class="anchored" data-anchor-id="use-case">Use Case</h2>
-<p>The thesis subject is going to be about object detection on military personal. For such topics almost no dataset is publicly available. Therefore, datasets without labels or not necessarily relevant images will be used for clustering.</p>
-<p>To provide comparable code the original flower images and images of weapons are used. First the images are provided to a pre-trained keras model with an omitted output layer. This provides a feature matrix with information on image features. On the matrices of all images a principal component analysis is performed and the results are forwarded to kmeans-clustering. The obtained results are mapped to the image files. This enables a shiny web app to load respective images of a cluster. The shiny web app is used as deployment stage in the Data Science Life Cycle.</p>
-<p>Additionally, it shall be mentioned that the coding is based on base functions as well as the tidyverse-package. This enables the utilisation of features which were not found in the respective other package. For example an elbow-curve was plotted with baseR.</p>
+<p>The thesis subject is going to be about object detection on military personal. For such topics almost no dataset is publicly available. Thus, images from datasets have to be examined and labeled manually.<br>
+The vast majority and variety of unlabeled images should not be evaluated picture by picture. Instead unsupervised learning with clustering shall be used to support the understanding of the image contents. This might help to sort out irrelevant images for labeling and also to create image-categories.</p>
+</section>
+<section id="procedure" class="level2 page-columns page-full">
+<h2 class="anchored" data-anchor-id="procedure">Procedure</h2>
+<p>The flower data is used to write working code and navigate any differences in the codeing languages. In a an early protopye Base R code was used for clustering and later transfered to tidyclust and recipe to generate a model for prediction on new images. However, during the transformation differences in the results were noticed and both codes and results kept for evaluation.</p>
+
+<div class="no-row-height column-margin column-container"><div class="">
+<p><strong>Important Note</strong><br>
+<a href="#fpd">Final Phase Discoveries</a></p>
+</div></div><p>The flower and weapon data hold information in form of features which have to be extracted before clustering. This tasks will be done by the pre-trained imagenet-vgg16 model which is available in the keras library. In accordance to the flower data blueprint from Gabo Flomo, the last output layer is omitted and provides 4096 features per image. Those are forwarded to pca and kmeans clustering to support the user’s activities of understanding data contents. All resulting clusters and models are deployed in a shiny web app. I would have been possible to evaluate all models before deployment, but the user shall decide which clusters are better and therefore needs access to all results.</p>
 </section>
 <section id="anticipated-outcomes" class="level2">
 <h2 class="anchored" data-anchor-id="anticipated-outcomes">Anticipated Outcomes</h2>
-<p>Regarding the anticipated outcomes it is highlighted that the code shall support exploratory activities. The following images are examples from the datasets to support following argumentation.</p>
-<p>For flower images 10 different clusters can be expected. This reflects the plant species labels provided in the dataset description.</p>
-<p>For weapon images an unknown amount of clusters can be expected. The optimal k will be calculated in the Data section. However, the objective is to sort the image files by some degree to simplify any manual label activities. For example it is imagined that images of rifles and pistols are in separate clusters. In this context it is important to consider that other image features will influence the cluster as well. Such superior influences can be people holding a weapon, different camera angles in the image and so on.</p>
+<p>Anticipated outcomes for exploratory activities on the flower data are separate clusters for yellow and white flowers. Regarding the weapon data the cluster might separate images of pistols and rifles, which needs a large amount of tinkering. More realistic results are clusters on close weapons, people with weapons, weapons in front of a landscape and camera angles.</p>
+<p>The flower data suggests 10 different clusters by named species in the dataset description. For the weapon data the amount of clusters is unknown and will be selected based on an elbow-curve.</p>
+<p>Following example images show that all flower images are made in close range, while weapon data has a large variety of objects, like soldiers, toys, persons aiming, persons not aiming, vehicles and landscapes.</p>
 <div id="fig-flowers" class="quarto-layout-panel" style="text-align:center;">
 <figure class="figure">
 <div class="quarto-layout-row quarto-layout-valign-top">
@@ -285,42 +336,21 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 </figure>
 </div>
 </section>
-<section id="datasets" class="level2">
-<h2 class="anchored" data-anchor-id="datasets">Datasets</h2>
-<p>The images can be found here:</p>
-<ul>
-<li>Weapons in Images on <a href="https://www.kaggle.com/datasets/jubaerad/weapons-in-images-segmented-videos">kaggle.com</a></li>
-<li>Flower Color Images on <a href="https://www.kaggle.com/datasets/olgabelitskaya/flower-color-images">kaggle.com</a></li>
-</ul>
-<p>To execute the code and the shiny web app the data shall be copied in folders “flowers” and “weapons” in the Rproject folder.<br>
-For flowers use the images in the subfolder “flower_images” and for weapons the subfolder “Weapons-in-Images” in the download files.</p>
-</section>
-<section id="environment" class="level2 page-columns page-full">
-<h2 class="anchored" data-anchor-id="environment">Environment</h2>
-<p>From experience in past projects it is known that my daily working computer is not able to perform image processing in keras without crashing. Therefore, solutions like Amazon Sagemaker Studio Lab, Databricks Community Edition and Amazon Sagemaker (without Studio Lab) were explored.</p>
-<p>While Sagemaker Studio Lab only supported Python, the Amazon Sagemaker solution was promising, despite generating a small amount of costs within the free usage limits of AWS. Unfortunately, loading a pre-trained keras model within an Jupyter Lab environment of Amazon Sagemaker returned twisted input shapes and therefore the code crashed when trying to insert images. Interestingly an R instance on local machines would provide a model with correct input-shapes. Thus, an stackoverflow-question was released for clarification of a bug.</p>
-
-<div class="no-row-height column-margin column-container"><div class="">
-<p>Stackoverflow<br>
-<a href="https://stackoverflow.com/questions/75988301/vgg16-different-shape-between-r-and-python-how-to-deal-with-that">1. my Question and my Answer</a><br>
-<a href="https://imgur.com/a/5dOaJWf">2. Example Images InputLayer</a></p>
-</div></div><p>The Databricks environment was registered via the community edition link. However it skyrocketed costs at AWS within one night so that the approach had to be canceled.<br>
-This project is implemented on a Windows Gaming PC for modeling activities and a MacBook for writing code and text. This approach is supported by a Github Repository to exchange files and results.</p>
-</section>
 </section>
 <section id="data" class="level1 page-columns page-full">
 <h1>Data</h1>
 <section id="data-ingestion" class="level2 page-columns page-full">
 <h2 class="anchored" data-anchor-id="data-ingestion">Data Ingestion</h2>
-<p>This project performs two different approaches on each of the introduced datasets. Thus, in the deployment phase four different models will be provided for the User’s comparision. This approach holds some conflicting libraries or duplicated steps. While this page focuses on the code for tidyverse, tidyclus, recipe package, there is another simplified file with code in BaseR.</p>
+<p>To prevent conflicts in the loaded libraries the above mentioned Base R approach is provided in another document, which is linked in the margin column on the right. This document focuses on the approach with tidyverse, tidyclust and recipe.</p>
 
 <div class="no-row-height column-margin column-container"><div class="">
-<p>Link to BaseR Code <a href="clustering_code.qmd">Link</a></p>
-</div></div><p>The following approach will result in a pipeline, which can be used for deployment and prediction. The BaseR code will not use a pipeline or prediction function and only provides results for the datasets. However, those results will also be used in deployment to search differences in the PCA of tidyverse and BaseR.</p>
-<p>The following code enables to switch between the flowers and weapons dataset, without changing other code chunks in the process.</p>
+<p><strong>Link</strong><br>
+<a href="clustering_code.qmd">Base R Code</a></p>
+</div></div><p>The following approach will result in a pipeline, which can be used for deployment and prediction. The Base R code will not use a pipeline or prediction function and only provides results for the clusters.</p>
+<p>The following code enables to switch between the flowers and weapons data, without changing other code chunks in the later process.</p>
 <div class="cell" data-freeze="true">
 <div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Switch to toggle between a prototype flower-images and the weapon images to be clustered</span></span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>flower_data <span class="ot">&lt;-</span> <span class="cn">TRUE</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>flower_data <span class="ot">&lt;-</span> <span class="cn">FALSE</span></span>
 <span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (flower_data){</span>
 <span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  myPath <span class="ot">&lt;-</span> <span class="st">"flowers"</span></span>
 <span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">print</span>(<span class="st">"Flower Data loaded."</span>)</span>
@@ -332,162 +362,394 @@ This project is implemented on a Windows Gaming PC for modeling activities and a
 <span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>myFiles <span class="ot">&lt;-</span> <span class="fu">list.files</span>(myPath)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
-<section id="feature-extraction" class="level2">
+<section id="data-split" class="level2">
+<h2 class="anchored" data-anchor-id="data-split">Data Split</h2>
+<p>The data will not be splitted for this unsupervised model training with subjective evaluation by the user.</p>
+<p>A split of data at any point in this project would prevent overfitting in the model. However, in this rare Use Case and for the given data such overfitting is wanted for most uniqueness in clusters. However, this is not appropriate for the prediction on new images.</p>
+<p>By <em>any point</em> it is meant that splits are neither performed on images, feature-arrays and principal components.</p>
+</section>
+<section id="data-analysis" class="level2">
+<h2 class="anchored" data-anchor-id="data-analysis">Data Analysis</h2>
+<p>Before the features are extracted a feeling for the files themselves shall be developed. Therefore the dimensions for each image are plotted. Images with less than 840px in each dimension are labeled as small and other images as large.</p>
+<p>The following plot shows the width and height in an xy-plot with colored labels. The black lines show the median-value for the respective dimension. The blue line is showing a ratio of 1 between x and y.<br>
+The plot shows that a lot of pictures have 1024px on at least one dimension and smaller size on the other. Looking at the median value of x it can be seen that this is larger than 1024. This is because of overlaps in the plot. In comparison to all pictures there is high amount of pictures having a width of 1280px.</p>
+<div class="cell" data-freeze="true">
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>get_num_pixels <span class="ot">&lt;-</span> <span class="cf">function</span>(filepath) {</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  img <span class="ot">&lt;-</span> <span class="fu">readJPEG</span>(filepath)</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  width <span class="ot">&lt;-</span> <span class="fu">dim</span>(img)[<span class="dv">2</span>]</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  height <span class="ot">&lt;-</span> <span class="fu">dim</span>(img)[<span class="dv">1</span>]</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(<span class="fu">list</span>(<span class="at">width =</span> width, <span class="at">height =</span> height))</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>width_size <span class="ot">&lt;-</span> <span class="fu">list</span>()</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>height_size <span class="ot">&lt;-</span> <span class="fu">list</span>()</span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>size_cat <span class="ot">&lt;-</span> <span class="fu">list</span>()</span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (file <span class="cf">in</span> myFiles) {</span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>  path <span class="ot">&lt;-</span> <span class="fu">paste</span>(myPath,<span class="st">"/"</span>,file,<span class="at">sep=</span><span class="st">""</span>)</span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>  dimensions <span class="ot">&lt;-</span> <span class="fu">get_num_pixels</span>(path)</span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>  width <span class="ot">&lt;-</span> dimensions<span class="sc">$</span>width</span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>  height <span class="ot">&lt;-</span> dimensions<span class="sc">$</span>height</span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (width <span class="sc">&lt;=</span> <span class="dv">840</span> <span class="sc">&amp;&amp;</span> height <span class="sc">&lt;=</span> <span class="dv">840</span>) {</span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a>    size_cat <span class="ot">&lt;-</span> <span class="fu">c</span>(size_cat, <span class="st">'small'</span>)</span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> {</span>
+<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a>    size_cat <span class="ot">&lt;-</span> <span class="fu">c</span>(size_cat, <span class="st">'large'</span>)</span>
+<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb4-23"><a href="#cb4-23" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb4-24"><a href="#cb4-24" aria-hidden="true" tabindex="-1"></a>  width_size <span class="ot">&lt;-</span> <span class="fu">c</span>(width_size, width)</span>
+<span id="cb4-25"><a href="#cb4-25" aria-hidden="true" tabindex="-1"></a>  height_size <span class="ot">&lt;-</span> <span class="fu">c</span>(height_size, height)</span>
+<span id="cb4-26"><a href="#cb4-26" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb4-27"><a href="#cb4-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-28"><a href="#cb4-28" aria-hidden="true" tabindex="-1"></a>myDF <span class="ot">&lt;-</span> <span class="fu">tibble</span>(<span class="at">x=</span><span class="fu">as.numeric</span>(width_size),<span class="at">y=</span><span class="fu">as.numeric</span>(height_size),<span class="at">z=</span><span class="fu">as.character</span>(size_cat))</span>
+<span id="cb4-29"><a href="#cb4-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-30"><a href="#cb4-30" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-31"><a href="#cb4-31" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(myDF, <span class="fu">aes</span>(x,y,<span class="at">colour=</span>z)) <span class="sc">+</span></span>
+<span id="cb4-32"><a href="#cb4-32" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>() <span class="sc">+</span></span>
+<span id="cb4-33"><a href="#cb4-33" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_abline</span>(<span class="at">intercept=</span><span class="dv">0</span>,<span class="at">slope=</span><span class="dv">1</span>,<span class="at">colour=</span><span class="st">"blue"</span>) <span class="sc">+</span></span>
+<span id="cb4-34"><a href="#cb4-34" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_vline</span>(<span class="at">xintercept =</span> <span class="fu">mean</span>(myDF<span class="sc">$</span>x), <span class="at">linetype =</span> <span class="st">"dashed"</span>, <span class="at">colour =</span> <span class="st">'black'</span>, <span class="at">size =</span> <span class="dv">1</span>) <span class="sc">+</span></span>
+<span id="cb4-35"><a href="#cb4-35" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_hline</span>(<span class="at">yintercept =</span> <span class="fu">mean</span>(myDF<span class="sc">$</span>y), <span class="at">linetype =</span> <span class="st">"dashed"</span>, <span class="at">colour =</span> <span class="st">'black'</span>, <span class="at">size =</span> <span class="dv">1</span>) <span class="sc">+</span></span>
+<span id="cb4-36"><a href="#cb4-36" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"Width"</span>, <span class="at">y =</span> <span class="st">"Height"</span>) <span class="sc">+</span></span>
+<span id="cb4-37"><a href="#cb4-37" aria-hidden="true" tabindex="-1"></a>  <span class="fu">xlim</span>(<span class="dv">0</span>,<span class="dv">1300</span>) <span class="sc">+</span> </span>
+<span id="cb4-38"><a href="#cb4-38" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ylim</span>(<span class="dv">0</span>,<span class="dv">1300</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Following statements support the discussed overlap for images haveing a width equal to 1280px. There are more than two thousand images with width 1280. Note that only the x-axis is counted, because a fixed width of 1280 still has different sizes in height.</p>
+<div class="cell" data-freeze="true">
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>myDF <span class="sc">|&gt;</span> <span class="fu">count</span>(x,y) <span class="sc">|&gt;</span> <span class="fu">arrange</span>(<span class="fu">desc</span>(n)) <span class="sc">|&gt;</span> <span class="fu">top_n</span>(<span class="dv">3</span>,n)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Finally, a quick overview on statistics. Those confirm the plotted median-values and also show the mean being a bit smaller than the median.</p>
+<div class="cell" data-freeze="true">
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(myDF)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="feature-extraction" class="level2 page-columns page-full">
 <h2 class="anchored" data-anchor-id="feature-extraction">Feature Extraction</h2>
-<p>At the beginning the images are prepared for feature extraction. The following code-chunk is based on keras-functions to load an image, transform it to an array that is suitable for the pretrained model and the prediction is performed for that image. The code returns the features of the model.</p>
+<p>To extract features for clustering the following code-chunk is based on keras-functions to load an image, transform it to an array that is suitable for the pretrained model and the prediction is performed for that image. The code returns the features of the image.</p>
 <div class="cell" data-freeze="true">
-<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>get_features <span class="ot">&lt;-</span> <span class="cf">function</span>(image_file,myModel){</span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="co"># takes: image file and model</span></span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="co"># returns: feature vector for the provided image</span></span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  <span class="co"># description:</span></span>
-<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  <span class="co"># the image is loaded with color and scaled to 224x224 px.</span></span>
-<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>  <span class="co"># In the next step the image is converted to an array and this array is prepared for prediction on the provided model</span></span>
-<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>  img <span class="ot">&lt;-</span> <span class="fu">image_load</span>(image_file, <span class="at">grayscale=</span><span class="cn">FALSE</span>,<span class="at">target_size =</span> <span class="fu">c</span>(<span class="dv">224</span>,<span class="dv">224</span>))</span>
-<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>  img_array <span class="ot">&lt;-</span> <span class="fu">image_to_array</span>(img)</span>
-<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>  reshaped_image_array <span class="ot">&lt;-</span> <span class="fu">array_reshape</span>(img_array,<span class="fu">c</span>(<span class="dv">1</span>,<span class="fu">dim</span>(img_array)))</span>
-<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>  prepro_img <span class="ot">&lt;-</span> <span class="fu">imagenet_preprocess_input</span>(reshaped_image_array)</span>
-<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>  features <span class="ot">&lt;-</span> myModel <span class="sc">|&gt;</span> <span class="fu">predict</span>(prepro_img)</span>
-<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(features)</span>
-<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>get_features <span class="ot">&lt;-</span> <span class="cf">function</span>(image_file,myModel){</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  <span class="co"># takes: image file and model</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  <span class="co"># returns: feature vector for the provided image</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>  <span class="co"># description:</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>  <span class="co"># the image is loaded with color and scaled to 224x224 px.</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>  <span class="co"># In the next step the image is converted to an array and this array is prepared for prediction on the provided model</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>  img <span class="ot">&lt;-</span> <span class="fu">image_load</span>(image_file, <span class="at">grayscale=</span><span class="cn">FALSE</span>,<span class="at">target_size =</span> <span class="fu">c</span>(<span class="dv">224</span>,<span class="dv">224</span>))</span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>  img_array <span class="ot">&lt;-</span> <span class="fu">image_to_array</span>(img)</span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>  reshaped_image_array <span class="ot">&lt;-</span> <span class="fu">array_reshape</span>(img_array,<span class="fu">c</span>(<span class="dv">1</span>,<span class="fu">dim</span>(img_array)))</span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>  prepro_img <span class="ot">&lt;-</span> <span class="fu">imagenet_preprocess_input</span>(reshaped_image_array)</span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>  features <span class="ot">&lt;-</span> myModel <span class="sc">|&gt;</span> <span class="fu">predict</span>(prepro_img)</span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(features)</span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>In the code-chunk above the pre-trained model is provided as argument. This enables changing the model for later improvement. The following code-chunk is loading the pre-trained model VGG16 from the keras library. Note, that the output layer is transformed to omit the actual output layer. Thus, the output is now the second last layer and will provide features as a matrix instead of classification labels.</p>
+
+<div class="no-row-height column-margin column-container"><div class="">
+<p><strong>Info</strong><br>
+Note that for some reason in R it is image_load() while in python it is img_load().</p>
+</div></div><p>In the code-chunk above the pre-trained model is provided as argument. This enables changing the model for later improvement and testing other models - target_size has to be adjusted manually or programed as argument. The following code-chunk is loading the pre-trained model VGG16 from the keras library. Note, that the output layer is omitted and therefore the second last layer will provide features as tensor instead of classification result.</p>
 <div class="cell" data-freeze="true">
-<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Load model</span></span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>model <span class="ot">&lt;-</span> <span class="fu">application_vgg16</span>(<span class="at">weights=</span><span class="st">"imagenet"</span>,<span class="at">include_top=</span><span class="cn">TRUE</span>)</span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Change Output to second last layer to access the feature map instead of classification result.</span></span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>output <span class="ot">&lt;-</span> model<span class="sc">$</span>layers[[<span class="fu">length</span>(model<span class="sc">$</span>layers)<span class="sc">-</span><span class="dv">1</span>]]<span class="sc">$</span>output</span>
-<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>model <span class="ot">&lt;-</span> <span class="fu">keras_model</span>(<span class="at">inputs=</span>model<span class="sc">$</span>input, <span class="at">outputs=</span>output)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Load model</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>model <span class="ot">&lt;-</span> <span class="fu">application_vgg16</span>(<span class="at">weights=</span><span class="st">"imagenet"</span>,<span class="at">include_top=</span><span class="cn">TRUE</span>)</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Change Output to second last layer to access the feature map instead of classification result.</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>output <span class="ot">&lt;-</span> model<span class="sc">$</span>layers[[<span class="fu">length</span>(model<span class="sc">$</span>layers)<span class="sc">-</span><span class="dv">1</span>]]<span class="sc">$</span>output</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>model <span class="ot">&lt;-</span> <span class="fu">keras_model</span>(<span class="at">inputs=</span>model<span class="sc">$</span>input, <span class="at">outputs=</span>output)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>In the following code-chunk every image file is processed with above described function to populate a list features and transform it to an Array with 4096 features per row (image).</p>
-<div class="cell" data-freeze="true">
-<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># empty list to hold extracted features per image</span></span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>myFeatures <span class="ot">&lt;-</span> <span class="fu">list</span>()</span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="co"># fill list with features by looping through file list and calling the function get_features</span></span>
-<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (img_file <span class="cf">in</span> myFiles){</span>
-<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>  <span class="co"># create path and call function</span></span>
-<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>  path <span class="ot">&lt;-</span> <span class="fu">paste</span>(myPath,<span class="st">"/"</span>,img_file,<span class="at">sep=</span><span class="st">""</span>)</span>
-<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>  feat <span class="ot">&lt;-</span> <span class="fu">get_features</span>(path,model)</span>
-<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>  <span class="co"># append List with features</span></span>
-<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>  len <span class="ot">&lt;-</span> <span class="fu">length</span>(myFeatures)</span>
-<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>  myFeatures[[len<span class="sc">+</span><span class="dv">1</span>]]<span class="ot">&lt;-</span>feat</span>
-<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>myFeatArray <span class="ot">&lt;-</span> <span class="fu">matrix</span>(<span class="fu">unlist</span>(myFeatures), <span class="at">ncol=</span><span class="dv">4096</span>, <span class="at">byrow=</span><span class="cn">TRUE</span>) </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
+<p>In the following code-chunk every image file is processed with above described function to populate a list of features and transform it to an matrix with 4096 features per row.</p>
 <p>Finally, the extracted features are transformed to a dataframe.</p>
 <div class="cell" data-freeze="true">
-<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># transform myFiles list to a single column dataframe</span></span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>file_names <span class="ot">&lt;-</span> <span class="fu">as.data.frame</span>(myFiles)</span>
-<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="co"># create a dataframe with pcomp per row</span></span>
-<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>file_features <span class="ot">&lt;-</span> <span class="fu">as.data.frame</span>(myFeatArray)</span>
-<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a><span class="co"># append both dataframes to one (no join due to missing parameter)</span></span>
-<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>df_data <span class="ot">&lt;-</span> <span class="fu">bind_cols</span>(file_names,file_features)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># transform myFiles list to a single column dataframe</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>file_names <span class="ot">&lt;-</span> <span class="fu">as.data.frame</span>(myFiles)</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="co"># create a dataframe with pcomp per row</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>file_features <span class="ot">&lt;-</span> <span class="fu">as.data.frame</span>(myFeatArray)</span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a><span class="co"># append both dataframes to one (no join due to missing parameter)</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>df_data <span class="ot">&lt;-</span> <span class="fu">bind_cols</span>(file_names,file_features)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="feature-engineering" class="level2">
 <h2 class="anchored" data-anchor-id="feature-engineering">Feature Engineering</h2>
-<p>To reduce the amount of features per image. PCA is applied to reduce the dataset to 100 components per image. This value is based on the blueprint from flower clustering, however it holds potential for later optimization in an ML workflow.</p>
-<p>The code below creates an recipe with the single pca_step. No normalization, because for some vectors the sum is zero and this would yield an error for division by zero.</p>
+<p>The 4096 features per images are reduced with principal component analysis. The blueprint value of 100 components is used and might be adjusted for model improvements.</p>
+<p>The code below creates a recipe with a single pca_step. A normalisation was not applied, because for some vectors the sum is zero and this would yield an error for division by zero. The omittance of normalisation is supported by the logic of image representation in arrays, which is already using a common scale for RGB-Value representation.</p>
 <div class="cell" data-freeze="true">
-<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>img_recipe <span class="ot">&lt;-</span> <span class="fu">recipe</span>(<span class="sc">~</span>.,<span class="at">data=</span>myFeatArray) <span class="sc">|&gt;</span></span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_pca</span>(<span class="fu">all_numeric</span>(),<span class="at">num_comp=</span><span class="dv">100</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Create recipe without label column by tilde-symbol</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>img_recipe <span class="ot">&lt;-</span> <span class="fu">recipe</span>(<span class="sc">~</span>.,<span class="at">data=</span>file_features) <span class="sc">|&gt;</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_pca</span>(<span class="fu">all_numeric</span>(),<span class="at">num_comp=</span><span class="dv">100</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 </section>
-<section id="model" class="level1">
+<section id="model" class="level1 page-columns page-full">
 <h1>Model</h1>
-<section id="optimal-k" class="level2">
+<section id="optimal-k" class="level2 page-columns page-full">
 <h2 class="anchored" data-anchor-id="optimal-k">Optimal K</h2>
-<p>The tidyverse and tidyclus libraries provide a tuning function that works with bootstrapping. However, this is very resource and time consuming and therefore executed with times = 1.</p>
-<p>Furthermore the workflow function from the recipe library is introduced, which can be used instead of preparation and baking. In this function the recipe and the model are provided.</p>
+<p>Before clustering with the pca-results, the amount of clusters are set. There is an old thumb rule called square-root-rule,to predict the amount of clusters, which is not very precise for large amount of data scientist observe today, but it can be used to set a range for the elbow curve. Thus, this value could be used as maximum for the following tuning function.</p>
 <div class="cell" data-freeze="true">
-<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># generate k_means function with tuneing for optimal k.</span></span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>optK <span class="ot">&lt;-</span> <span class="fu">k_means</span>() <span class="sc">|&gt;</span></span>
-<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set_args</span>(<span class="at">num_clusters=</span><span class="fu">tune</span>())</span>
-<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="co"># generate workflow with preprocessing recipe and model</span></span>
-<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>optK_wf <span class="ot">&lt;-</span> <span class="fu">workflow</span>(img_recipe,optK)</span>
-<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a><span class="co"># set bootstraps</span></span>
-<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>boots <span class="ot">&lt;-</span> <span class="fu">bootstraps</span>(df_data,<span class="at">times=</span><span class="dv">1</span>)</span>
-<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a><span class="co"># execute cluster tuning and store results</span></span>
-<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>tune_res <span class="ot">&lt;-</span> <span class="fu">tune_cluster</span>(</span>
-<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a>  optK_wf,</span>
-<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a>  <span class="at">resample =</span> boots</span>
-<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-17"><a href="#cb9-17" aria-hidden="true" tabindex="-1"></a><span class="co"># retrieve tuning results</span></span>
-<span id="cb9-18"><a href="#cb9-18" aria-hidden="true" tabindex="-1"></a><span class="fu">collect_metrics</span>(tune_res)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sqrt</span>(<span class="fu">nrow</span>(df_data))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>The tidyverse and tidyclust libraries provide a tuning function that works with evaluation functions like bootstrapping or cv-folds.<br>
+CV-folds is not used to achieve the wanted over fit on training data. Bootstrapping is used as applicable evaluation method. It generates a sample data in the size of original data by taking samples with replacement. The times argument is deciding how often this happens. However, using the standard settings for bootstrapping requires a very long run time. Therefore, not necessarily optimal values in <em>times</em> are used for this project.</p>
+<p>Furthermore the workflow function from the recipe library is introduced, which can be used instead of preparation and baking. In this function the recipe and the model are provided to tune_cluster().</p>
+<div class="cell" data-freeze="true">
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co"># generate k_means function with tuneing for optimal k.</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>optK <span class="ot">&lt;-</span> <span class="fu">k_means</span>() <span class="sc">|&gt;</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set_args</span>(<span class="at">num_clusters=</span><span class="fu">tune</span>())</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a><span class="co"># generate workflow with preprocessing recipe and model</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>optK_wf <span class="ot">&lt;-</span> <span class="fu">workflow</span>(img_recipe,optK)</span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a><span class="co"># set bootstraps or cv-folds</span></span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>myBoots <span class="ot">&lt;-</span> <span class="fu">bootstraps</span>(df_data,<span class="at">times=</span><span class="dv">2</span>)</span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a><span class="co"># myCVfolds &lt;- vfold_cv(df_data,v=5)</span></span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a>start <span class="ot">&lt;-</span> <span class="fu">Sys.time</span>()</span>
+<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a><span class="co"># execute cluster tuning and store results</span></span>
+<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a>tune_res <span class="ot">&lt;-</span> <span class="fu">tune_cluster</span>(</span>
+<span id="cb12-15"><a href="#cb12-15" aria-hidden="true" tabindex="-1"></a>  optK_wf,</span>
+<span id="cb12-16"><a href="#cb12-16" aria-hidden="true" tabindex="-1"></a>  <span class="at">resample =</span> myBoots,</span>
+<span id="cb12-17"><a href="#cb12-17" aria-hidden="true" tabindex="-1"></a>  <span class="at">metrics =</span> <span class="fu">cluster_metric_set</span>(sse_within_total,sse_total,sse_ratio),</span>
+<span id="cb12-18"><a href="#cb12-18" aria-hidden="true" tabindex="-1"></a>  <span class="at">grid =</span> <span class="fu">expand.grid</span>(<span class="at">num_clusters=</span><span class="dv">1</span><span class="sc">:</span><span class="dv">20</span>)</span>
+<span id="cb12-19"><a href="#cb12-19" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb12-20"><a href="#cb12-20" aria-hidden="true" tabindex="-1"></a>end <span class="ot">&lt;-</span> <span class="fu">Sys.time</span>()</span>
+<span id="cb12-21"><a href="#cb12-21" aria-hidden="true" tabindex="-1"></a><span class="co"># retrieve tuning results</span></span>
+<span id="cb12-22"><a href="#cb12-22" aria-hidden="true" tabindex="-1"></a>myMetrics <span class="ot">&lt;-</span> <span class="fu">collect_metrics</span>(tune_res)</span>
+<span id="cb12-23"><a href="#cb12-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-24"><a href="#cb12-24" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(end<span class="sc">-</span>start) <span class="co"># no additional text required for output</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+
+<div class="no-row-height column-margin column-container"><div class="">
+<p><strong>Info</strong><br>
+tune_cluster() with cvfold and bootstrapping is shown for completeness of the R learning project.</p>
+</div></div><div class="cell" data-freeze="true">
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>myMetrics <span class="sc">|&gt;</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(.metric <span class="sc">==</span> <span class="st">"sse_within_total"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> num_clusters, <span class="at">y =</span> mean)) <span class="sc">+</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>() <span class="sc">+</span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>() <span class="sc">+</span></span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>() <span class="sc">+</span></span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ylab</span>(<span class="st">"mean WSS"</span>) <span class="sc">+</span></span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">xlab</span>(<span class="st">"Number of clusters"</span>) <span class="sc">+</span></span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_x_continuous</span>(<span class="at">limits =</span> <span class="fu">c</span>(<span class="dv">0</span>,<span class="dv">20</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="k-means---fit" class="level2">
 <h2 class="anchored" data-anchor-id="k-means---fit">K-Means - Fit</h2>
 <p>After the optimal k was established, the model function can be provided with a number of clusters to generate. This will be introduced to a new workflow, which then is used for the fit.</p>
 <div class="cell" data-freeze="true">
-<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co"># generate k_means function with optimal k value</span></span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>km <span class="ot">&lt;-</span> <span class="fu">k_means</span>() <span class="sc">|&gt;</span></span>
-<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set_args</span>(<span class="at">num_clusters=</span><span class="dv">10</span>)</span>
-<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="co"># generate workflow with preprocessing recipe and model</span></span>
-<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>km_wf <span class="ot">&lt;-</span> <span class="fu">workflow</span>(img_recipe,km)</span>
-<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a><span class="co"># fit the model to the data</span></span>
-<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>km_fit <span class="ot">&lt;-</span> <span class="fu">fit</span>(km_wf,<span class="at">data=</span>df_data)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co"># generate k_means function with optimal k value</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>km <span class="ot">&lt;-</span> <span class="fu">k_means</span>() <span class="sc">|&gt;</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set_args</span>(<span class="at">num_clusters=</span><span class="dv">8</span>)</span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a><span class="co"># generate workflow with preprocessing recipe and model</span></span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>km_wf <span class="ot">&lt;-</span> <span class="fu">workflow</span>(img_recipe,km)</span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a><span class="co"># fit the model to the data</span></span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a>km_fit <span class="ot">&lt;-</span> <span class="fu">fit</span>(km_wf,<span class="at">data=</span>df_data)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 </section>
 <section id="deployment" class="level1 page-columns page-full">
 <h1>Deployment</h1>
-<section id="extraction" class="level2">
+<section id="extraction" class="level2 page-columns page-full">
 <h2 class="anchored" data-anchor-id="extraction">Extraction</h2>
 <p>Usually model accuracy is reviewed before deployment, but the model is meant to support the exploration of a large amount of images. Therefore, the model results are reviewed and discussed in the deployment chapter of this work.</p>
 <p>Before review the cluster assignments are mapped to the image-files. Additionally, the result-table is stored in an csv-file. This will enable the user of the deployed data to look at a cluster’s contents.</p>
 <div class="cell" data-freeze="true">
-<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co"># string for filepath</span></span>
-<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>myfilepath <span class="ot">&lt;-</span> <span class="fu">paste</span>(<span class="st">"recipe_"</span>,myPath,<span class="st">"_"</span>,<span class="fu">get_time</span>(),<span class="st">"_cluster"</span>,<span class="at">sep=</span><span class="st">""</span>)</span>
-<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="co"># extracting the cluster-assignments and bind them to the filename dataframe</span></span>
-<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>df_clustered <span class="ot">&lt;-</span> <span class="fu">bind_cols</span>(file_names,<span class="fu">extract_cluster_assignment</span>(km_fit))</span>
-<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="co"># storing results in csv file</span></span>
-<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a><span class="fu">write_csv</span>(df_clustered,<span class="fu">paste</span>(myfilepath,<span class="st">".csv"</span>,<span class="at">sep=</span><span class="st">""</span>))</span>
-<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a><span class="co"># returning results</span></span>
-<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>df_clustered</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co"># string for filepath</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>myfilepath <span class="ot">&lt;-</span> <span class="fu">paste</span>(<span class="st">"recipe_"</span>,myPath,<span class="st">"_"</span>,<span class="fu">get_time</span>(),<span class="st">"_cluster"</span>,<span class="at">sep=</span><span class="st">""</span>)</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a><span class="co"># extracting the cluster-assignments and bind them to the filename dataframe</span></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>df_clustered <span class="ot">&lt;-</span> <span class="fu">bind_cols</span>(file_names,<span class="fu">extract_cluster_assignment</span>(km_fit))</span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a><span class="co"># storing results in csv file</span></span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a><span class="fu">write_csv</span>(df_clustered,<span class="fu">paste</span>(myfilepath,<span class="st">".csv"</span>,<span class="at">sep=</span><span class="st">""</span>))</span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a><span class="co"># returning results</span></span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>df_clustered</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>The model shall also be used for clustering of new images with the predict()-function. Therefore, the model is stored in an RDS-file.</p>
 <div class="cell" data-freeze="true">
-<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="fu">saveRDS</span>(km_fit, <span class="fu">paste</span>(myfilepath,<span class="st">".rds"</span>,<span class="at">sep=</span><span class="st">""</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="fu">saveRDS</span>(km_fit, <span class="fu">paste</span>(myfilepath,<span class="st">".rds"</span>,<span class="at">sep=</span><span class="st">""</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>The stored model has a very large file-size, especially for the weapons-model. This file size was in conflict with github’s storage limits. Other options like h5-files and deployment with APIs were investigated. The h5-files did not work probably, the API solution with ventier did not ease the file size problem.<br>
-However, the butcher-library can be used to reduce the fitted model to essentials. The following code-chunks show that vital parts of the model are within … . Unfortunately for the size, those components were not removed with butcher.</p>
-<div class="cell" data-freeze="true">
-<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="fu">weigh</span>(km_fit)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+However, the butcher-library can be used to reduce the fitted model to essentials. The following code-chunks show that vital parts of the model are within … . Unfortunately regarding the size, those components were not removed with butcher. The saved RDS-file is exchanged with GoogleDrive.</p>
+
+<div class="no-row-height column-margin column-container"><div class="">
+<p><strong>RDS Files</strong><br>
+<a href="https://drive.google.com/drive/folders/1LQ2Ixx4rwxcAW8TQPocOXQnUKcDCvBSE?usp=sharing">GoogleDrive</a></p>
+</div></div><div class="cell" data-freeze="true">
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="fu">weigh</span>(km_fit)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="cell" data-freeze="true">
-<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>stripped_model <span class="ot">&lt;-</span> <span class="fu">butcher</span>(km_fit)</span>
-<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="fu">weigh</span>(stripped_model)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>stripped_model <span class="ot">&lt;-</span> <span class="fu">butcher</span>(km_fit)</span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="fu">weigh</span>(stripped_model)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="shiny-web-app" class="level2 page-columns page-full">
 <h2 class="anchored" data-anchor-id="shiny-web-app">Shiny Web App</h2>
-<p>This part covers the model-deployment in a shiny web app. For details on the code behind the app, please click on the technical documentation link in the right margin.</p>
+<p>This part covers the deployment in a shiny app. For details on the code behind the app, please click on the User Guide link in the right margin and also see comments in the source code of <em>app.R</em>. Additionally, the app is deployed on shinyapps.io. It is also possible to access the User Guide on shinyapps.io.</p>
 
 <div class="no-row-height column-margin column-container"><div class="">
-<p>Links to:<br>
-<a href="http://www.google.com">Shiny App</a><br>
-<a href="http://www.bing.com">Shiny TecDoc</a></p>
-</div></div><p>In the section BANANA RAMA of the app a bar graph shows the amount of images per cluster for one of the four models. To measure the results (similarity of images in clusters) in a heuristic manner, four random images are displayed when a specific cluster is activated.</p>
-<p>Regarding both models of the flower images one can speak about success. However, the dataset description suggested 10 clusters by the labeled species. The model only extracted 9 clusters with a strong focus on color. Here might be an opportunity to for further modeling activities to achieve clusters by species.<br>
-For the weapon images, 10 clusters were chosen based on the elbow-curve. The clusters do not distinguish between pistols or rifles, but the enable the distinction of images with people aiming with a rifle, camera footage, groups of people or other scenic photographs. This can be seen as success to sort out irrelevant images for labeling. However, in comparison to the relative clean flower dataset the weapon dataset was very indistinct. Therefore, more clusters or other feature extraction approaches might be useful in the model. Last but not least, another amount of PCA could be reviewed for both datasets.</p>
-<p>In the section BANANA IMAGE of the app any image can be uploaded and the predict() function is going to sort it into one of the extracted clusters. Finally, four random images of the predicted cluster are shown for comparison by the human eye.</p>
-<p>The app is published at shineable.io.</p>
+<p><strong>Links</strong><br>
+<a href="https://thearmbreaker.shinyapps.io/clustering-with-keras/">myApp on shinyapps.io</a><br>
+<a href="TecDoc_Shiny.html" target="_blank">myApp User Guide</a></p>
+</div></div><p>For the deployment following code can be used. To start with the deployment a list of relevant files is created to avoid publishing of unnecessary files.</p>
+<div class="cell" data-freeze="true">
+<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>myBundle <span class="ot">&lt;-</span> <span class="fu">c</span>()</span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> <span class="fu">list.files</span>()) {</span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>  file_format <span class="ot">&lt;-</span> <span class="fu">strsplit</span>(i,<span class="st">"</span><span class="sc">\\</span><span class="st">."</span>)[[<span class="dv">1</span>]][<span class="dv">2</span>]</span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (file_format <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">"rds"</span>,<span class="st">"csv"</span>,<span class="st">"html"</span>,<span class="st">"R"</span>) <span class="sc">|</span> ( <span class="fu">is.na</span>(file_format) <span class="sc">&amp;</span> (i <span class="sc">!=</span> <span class="st">"old_results"</span> <span class="sc">&amp;</span> i <span class="sc">!=</span> <span class="st">"rsconnect"</span>))) {</span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>    myBundle <span class="ot">&lt;-</span> <span class="fu">c</span>(myBundle,i)</span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> {</span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a>myBundle</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-freeze="true">
+<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="co"># install.packages('rsconnect')</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(rsconnct)</span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a><span class="co"># rsconnect::setAccountInfo(name='thearmbreaker', token='TOKEN', secret='SECRET')</span></span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a><span class="fu">deployApp</span>(</span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">appFiles =</span> myBundle,</span>
+<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">appName =</span> <span class="st">"clustering-with-keras"</span>,</span>
+<span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">upload =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb20-10"><a href="#cb20-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">logLevel =</span> <span class="st">"verbose"</span></span>
+<span id="cb20-11"><a href="#cb20-11" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb20-12"><a href="#cb20-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-13"><a href="#cb20-13" aria-hidden="true" tabindex="-1"></a><span class="co">#configureApp("app_ImageClustering",size="xlarge")</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="description-of-app" class="level2">
+<h2 class="anchored" data-anchor-id="description-of-app">Description of App</h2>
+<p>The deployed app was recorded to save results in case of crashes. A youtube video is embedded, in case the upload to moodle has a size limit.</p>
+<div style="display: flex; justify-content: center;">
+<div class="quarto-video"><iframe src="https://www.youtube.com/embed/Lu9IAUXZqQg" width="480" height="360" title="" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen=""></iframe></div>
+</div>
+<p>In the section <strong>Show Clusters</strong> of the app a bar graph shows the amount of images per cluster for one of the four models. To evaluate the results (similarity of images in clusters) in a heuristic manner, four random images are displayed when a specific cluster is activated.<br>
+The app shows an example for naming the clusters with a text input-field. The required code is not implemented but might look like the below snippet which writes the names to an sql table.</p>
+<div class="cell" data-freeze="true">
+<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(DBI)</span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>cluster_name <span class="ot">&lt;-</span> input<span class="sc">$</span>Textfield</span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>selected_cluster <span class="ot">&lt;-</span> input<span class="sc">$</span>var_clus</span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>myDataframe <span class="ot">&lt;-</span> <span class="fu">tibble</span>(<span class="at">cluster_names=</span><span class="fu">c</span>(cluster_name), <span class="at">clusters=</span><span class="fu">c</span>(selected_cluster))</span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a><span class="fu">dbWriteTable</span>(connection,cluster_table,myDataframe, <span class="at">append=</span><span class="cn">TRUE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>In the section <strong>Cluster New Image</strong> of the app any image can be uploaded and the predict() function is going to sort it into one of the extracted clusters. Finally, four random images of the predicted cluster are shown for comparison by the human eye.</p>
+</section>
+<section id="interpreting-results-with-app" class="level2">
+<h2 class="anchored" data-anchor-id="interpreting-results-with-app">Interpreting Results with App</h2>
+<p>With the deployed app, the unsupervised clustering algorithm can conveniently be evaluated. The following table shows an interpretation of results shown in the app. Please consider, that the shown images might differ in another run, because they represent a sample of four from all images in the cluster.</p>
+<div style="overflow-x:auto;">
+<table class="table">
+<caption>Label-suggestions for Clusters</caption>
+<colgroup>
+<col style="width: 9%">
+<col style="width: 9%">
+<col style="width: 9%">
+<col style="width: 9%">
+<col style="width: 9%">
+<col style="width: 9%">
+<col style="width: 9%">
+<col style="width: 9%">
+<col style="width: 9%">
+<col style="width: 9%">
+<col style="width: 9%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Cluster</th>
+<th>Cluster_1</th>
+<th>Cluster_2</th>
+<th>Cluster_3</th>
+<th>Cluster_4</th>
+<th>Cluster_5</th>
+<th>Cluster_6</th>
+<th>Cluster_7</th>
+<th>Cluster_8</th>
+<th>Cluster_9</th>
+<th>Cluster_10</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Flowers</td>
+<td>Yellow</td>
+<td>Dark-Red</td>
+<td>Violet</td>
+<td>Daisy-ish</td>
+<td>White</td>
+<td>Purple</td>
+<td>Light-Yellow</td>
+<td>Rose</td>
+<td>Bright-Red</td>
+<td>Orange</td>
+</tr>
+<tr class="even">
+<td>Flowers_predict</td>
+<td>Rose / Bright-Violet</td>
+<td>Orange</td>
+<td>Unspecific</td>
+<td>White/Rose</td>
+<td>Yellow</td>
+<td>Daisy-ish, blossoms up</td>
+<td>Daisy-ish, blossoms down</td>
+<td>Violet</td>
+<td>White</td>
+<td>Bright-Yellow</td>
+</tr>
+<tr class="odd">
+<td>Weapons</td>
+<td>Aiming Rifles/Pistols in profile</td>
+<td>Footage from single incident</td>
+<td>unspecific</td>
+<td>unspecific</td>
+<td>Movie like</td>
+<td>Movies and landscape photos with military personal</td>
+<td>Movie like with weapons close to camera</td>
+<td>Military personal with weapons</td>
+<td>Toys, Close range images</td>
+<td>Shooting Range</td>
+</tr>
+<tr class="even">
+<td>Weapons_predict</td>
+<td>Unspecific, movie like</td>
+<td>Toys</td>
+<td>Soldiers with weapon</td>
+<td>Military in landscape</td>
+<td>unspecific, movie like</td>
+<td>Shooting Range with table of weapons</td>
+<td>Shooting Range</td>
+<td>Aiming Rifles / Pistols in profile</td>
+<td>Not trained</td>
+<td>Not trained</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Regarding both models of the flower images one can speak about success. However, the dataset description suggested 10 clusters by the labeled species. In comparision of the barplots for flowers and flowers_predict it is visible that flowers_predicts has a very high amount of pictures in Cluster_1. In flowers the images are more evenly spreaded over the clusters.</p>
+<p>For the weapon-images different amount of clusters where used. The weapons model shows more evenly spreaded amount of images per cluster. The weapons_predict shows evenly spreaded amount of images over clusters 2,3,4,6,7 and 8. But Cluster 1 and 5 are rather large and unspecific.<br>
+The clusters do not distinguish between pistols or rifles, but the enable the distinction of images with people aiming with a rifle, camera footage, groups of people or other scenic photographs. This can be seen as success to sort out irrelevant images for labeling.<br>
+However, in comparison to the relative clean flower dataset the weapon dataset was very indistinct. Therefore, more clusters or other feature extraction approaches might be useful in the model. Last but not least, another amount of PCA could be reviewed for both datasets.</p>
 </section>
 </section>
 <section id="outlook" class="level1">
 <h1>Outlook</h1>
-<p>This project could be improved or further devoloped. Huge potential has the implementation of MLflow to track improvements in PCA, k-means or feature extraction with keras.</p>
+<p>This project could be improved or further developed. There is potential in the implementation of MLflow to track improvements in PCA, k-means or feature extraction with keras.</p>
+<ul>
+<li>Using a previous outputlayer in the pre-trained Keras model could result in more distinct features for helmets, pistols, rifles, and similar items.</li>
+<li>Improvements of PCA or K-Means might be tracked with MLflow</li>
+<li>Uploaded images could be stored in a bucket and used for new clustering training (introduce retrain-triggers)</li>
+<li>Batch-processing for multiple images with User Upload</li>
+<li>Load image data from bucket or googledrive. For example with the googledrive library which is part of tidyverse.</li>
+</ul>
+<p>Finally, minor technical issues could be addressed. The shiny app uses SelectInput in the UI, which has poor performance by the large amount of clusters. A better approach might be the selectizeInput function which is used on the Server side of the app.<br>
+Currently, the app generates warnings when loading trained clusters while displaying pictures for a cluster that is not included in the loaded cluster.</p>
+</section>
+<section id="notes" class="level1">
+<h1>Notes</h1>
+<section id="fpd" class="level2">
+<h2 class="anchored" data-anchor-id="fpd">Final Phase Discoveries</h2>
+<p>In the last retraining it was noticed that tidyverse has a special k_means() function for text analysis. This might be the reason for different results while building the project. kmeans() is part of the stats package used in both approaches - after changing the code.<br>
+Therefore, either the tidyverse and the Base R code approach might have similar results. Behind step_pca() of the recipe library the prcomp() is used. prcomp() is a function from the stats package that also provides kmeans().</p>
+<p><strong>Why the Base R code was continued:</strong><br>
+As this was as finding of the final phase and a rather sophisticated shiny app already established, the two approaches are continued to keep the R code for project submission.</p>
+</section>
 </section>
 
 </main>
