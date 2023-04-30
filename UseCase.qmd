@@ -118,14 +118,7 @@ The vast majority and variety of unlabeled images should not be evaluated pictur
 
 The flower data is used to write working code and navigate any differences in the coding languages. In a an early prototype Base R code was used for clustering and later transferred to tidyclust and recipe to generate a model for prediction on new images. However, during the transformation differences in the results were noticed and both codes and results kept for evaluation.
 
-:::: column-margin
-::: {.callout-important}
-## Important Note
-[Final Phase Discoveries](#fpd)
-:::
-::::
-
-The flower and weapon data hold information in form of features which have to be extracted before clustering. This tasks will be done by the pre-trained imagenet-vgg16 model which is available in the keras library. In accordance to the flower data blueprint from Gabo Flomo, the last output layer is omitted and provides 4096 features per image. Those are forwarded to pca and kmeans clustering to support the user's activities of understanding data contents. All resulting clusters and models are deployed in a shiny web app. I would have been possible to evaluate all models before deployment, but the user shall decide which clusters are better and therefore needs access to all results.
+The flower and weapon data hold information in form of features which have to be extracted before clustering. This tasks will be done by the pre-trained imagenet-vgg16 model which is available in the keras library. In accordance to the flower data blueprint from Gabo Flomo, the last output layer is omitted and provides 4096 features per image. Those are forwarded to pca and kmeans clustering to support the user's activities of understanding data contents. All resulting clusters and models are deployed in a shiny web app. It would have been possible to evaluate all models before deployment, but the user shall decide which clusters are better and therefore needs access to all results.
 
 ## Anticipated Outcomes
 
@@ -240,8 +233,8 @@ myDF <- tibble(x=as.numeric(width_size),y=as.numeric(height_size),z=as.character
 ggplot(myDF, aes(x,y,colour=z)) +
   geom_point() +
   geom_abline(intercept=0,slope=1,colour="blue") +
-  geom_vline(xintercept = mean(myDF$x), linetype = "dashed", colour = 'black', size = 1) +
-  geom_hline(yintercept = mean(myDF$y), linetype = "dashed", colour = 'black', size = 1) +
+  geom_vline(xintercept = mean(myDF$x), linetype = "dashed", colour = 'black', linewidth = 1) +
+  geom_hline(yintercept = mean(myDF$y), linetype = "dashed", colour = 'black', linewidth = 1) +
   labs(x = "Width", y = "Height") +
   xlim(0,1300) + 
   ylim(0,1300)
@@ -362,7 +355,7 @@ Furthermore the workflow function from the recipe library is introduced, which c
 ```{r kmean-tuning}
 #| cache: true
 # generate k_means function with tuneing for optimal k.
-optK <- kmeans() |>
+optK <- k_means() |>
   set_args(num_clusters=tune())
 
 # generate workflow with preprocessing recipe and model
@@ -415,8 +408,8 @@ After the optimal k was established, the model function can be provided with a n
 ```{r kmean-fit}
 #| cache: true
 # generate k_means function with optimal k value
-km <- kmeans() |>
-  set_args(num_clusters=8)
+km <- k_means() |>
+  set_args(num_clusters=10)
 
 # generate workflow with preprocessing recipe and model
 km_wf <- workflow(img_recipe,km)
@@ -448,7 +441,6 @@ df_clustered |>
 The model shall also be used for clustering of new images with the predict()-function. Therefore, the model is stored in an RDS-file.
 
 ```{r store-model}
-#| eval: false
 saveRDS(km_fit, paste(myfilepath,".rds",sep=""))
 ```
 
@@ -463,12 +455,10 @@ However, the butcher-library can be used to reduce the fitted model to essential
 ::::
 
 ```{r butcher-model-one}
-#| eval: false
 weigh(km_fit)
 ```
 
 ```{r butcher-model-two}
-#| eval: false
 stripped_model <- butcher(km_fit)
 weigh(stripped_model)
 ```

@@ -6,8 +6,9 @@
 trash.qmd
 *.rds
 *.DS_Store
-sql-task-gapminder-happy-2020.html
-.RData
+*.RData
+*.rdb
+*.rdx
 .RDataTmp
 weapons_featArray.csv
 old_results/
