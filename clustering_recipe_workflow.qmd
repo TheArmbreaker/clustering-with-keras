@@ -2,6 +2,8 @@
 title: "clustering"
 format: html
 editor: source
+execute:
+  echo: false
 ---
 
 ## Environment Preparation
