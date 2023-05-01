@@ -118,7 +118,9 @@ The vast majority and variety of unlabeled images should not be evaluated pictur
 
 The flower data is used to write working code and navigate any differences in the coding languages. In a an early prototype Base R code was used for clustering and later transferred to tidyclust and recipe to generate a model for prediction on new images. However, during the transformation differences in the results were noticed and both codes and results kept for evaluation.
 
-The flower and weapon data hold information in form of features which have to be extracted before clustering. This tasks will be done by the pre-trained imagenet-vgg16 model which is available in the keras library. In accordance to the flower data blueprint from Gabo Flomo, the last output layer is omitted and provides 4096 features per image. Those are forwarded to pca and kmeans clustering to support the user's activities of understanding data contents. All resulting clusters and models are deployed in a shiny web app. It would have been possible to evaluate all models before deployment, but the user shall decide which clusters are better and therefore needs access to all results.
+The flower and weapon data hold information in form of features which have to be extracted before clustering. This tasks will be done by the pre-trained imagenet-vgg16 model which is available in the keras library. In accordance to the flower data blueprint from Gabo Flomo, the last output layer is omitted and provides image features. Those are forwarded to pca and kmeans clustering to support the user's activities of understanding data contents. All resulting clusters and models are deployed in a shiny web app. It would have been possible to evaluate all models before deployment, but the user shall decide which clusters are better and therefore needs access to all results.
+
+![Procedure Image](procedure_example.png){style="display: flex; justify-content: center;text-align:center;"}
 
 ## Anticipated Outcomes
 

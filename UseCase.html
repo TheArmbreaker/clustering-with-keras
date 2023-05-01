@@ -264,7 +264,13 @@ The vast majority and variety of unlabeled images should not be evaluated pictur
 <section id="procedure" class="level2">
 <h2 class="anchored" data-anchor-id="procedure">Procedure</h2>
 <p>The flower data is used to write working code and navigate any differences in the coding languages. In a an early prototype Base R code was used for clustering and later transferred to tidyclust and recipe to generate a model for prediction on new images. However, during the transformation differences in the results were noticed and both codes and results kept for evaluation.</p>
-<p>The flower and weapon data hold information in form of features which have to be extracted before clustering. This tasks will be done by the pre-trained imagenet-vgg16 model which is available in the keras library. In accordance to the flower data blueprint from Gabo Flomo, the last output layer is omitted and provides 4096 features per image. Those are forwarded to pca and kmeans clustering to support the user’s activities of understanding data contents. All resulting clusters and models are deployed in a shiny web app. It would have been possible to evaluate all models before deployment, but the user shall decide which clusters are better and therefore needs access to all results.</p>
+<p>The flower and weapon data hold information in form of features which have to be extracted before clustering. This tasks will be done by the pre-trained imagenet-vgg16 model which is available in the keras library. In accordance to the flower data blueprint from Gabo Flomo, the last output layer is omitted and provides image features. Those are forwarded to pca and kmeans clustering to support the user’s activities of understanding data contents. All resulting clusters and models are deployed in a shiny web app. It would have been possible to evaluate all models before deployment, but the user shall decide which clusters are better and therefore needs access to all results.</p>
+<div class="quarto-figure quarto-figure-center" style="display: flex; justify-content: center;text-align:center;">
+<figure class="figure">
+<p><img src="procedure_example.png" class="img-fluid figure-img"></p>
+<p></p><figcaption class="figure-caption">Procedure Image</figcaption><p></p>
+</figure>
+</div>
 </section>
 <section id="anticipated-outcomes" class="level2">
 <h2 class="anchored" data-anchor-id="anticipated-outcomes">Anticipated Outcomes</h2>
@@ -776,16 +782,18 @@ Shinyapps.io
  [9] "recipe_flowers.csv"                            
 [10] "recipe_flowers_2023_04_24_19_36_28_cluster.rds"
 [11] "recipe_weapons.csv"                            
-[12] "recipe_weapons_2023_05_01_14_45_08_cluster.csv"
-[13] "recipe_weapons_2023_05_01_14_45_08_cluster.rds"
-[14] "TecDoc_Shiny.html"                             
-[15] "TecDoc_Shiny_files"                            
-[16] "UseCase.html"                                  
-[17] "UseCase_cache"                                 
-[18] "UseCase_files"                                 
-[19] "weapons"                                       
-[20] "weapons_cluster.rds"                           
-[21] "weapons_featArray.csv"                         </code></pre>
+[12] "recipe_weapons_2023_05_01_15_17_18_cluster.csv"
+[13] "recipe_weapons_2023_05_01_15_17_18_cluster.rds"
+[14] "recipe_weapons_2023_05_01_15_18_38_cluster.csv"
+[15] "recipe_weapons_2023_05_01_15_18_38_cluster.rds"
+[16] "TecDoc_Shiny.html"                             
+[17] "TecDoc_Shiny_files"                            
+[18] "UseCase.html"                                  
+[19] "UseCase_cache"                                 
+[20] "UseCase_files"                                 
+[21] "weapons"                                       
+[22] "weapons_cluster.rds"                           
+[23] "weapons_featArray.csv"                         </code></pre>
 </div>
 </div>
 <div class="cell">
