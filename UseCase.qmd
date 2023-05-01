@@ -54,7 +54,7 @@ In this R learning project the python code from Gabo Flomo is used as blueprint.
 :::: column-margin
 ::: {.callout-note}
 ## Link
-[GitHub Repo](https://github.com/TheArmbreaker/clustering-with-keras)
+[GitHub Repo](https://github.com/TheArmbreaker/clustering-with-keras){target="_blank"}
 :::
 ::::
 
@@ -70,8 +70,8 @@ Overview of names for **flower** and **weapon**
 
 The images can be found here:
 
--   Weapons in Images on [kaggle.com](https://www.kaggle.com/datasets/jubaerad/weapons-in-images-segmented-videos)
--   Flower Color Images on [kaggle.com](https://www.kaggle.com/datasets/olgabelitskaya/flower-color-images)
+-   Weapons in Images on [kaggle.com](https://www.kaggle.com/datasets/jubaerad/weapons-in-images-segmented-videos){target="_blank"}
+-   Flower Color Images on [kaggle.com](https://www.kaggle.com/datasets/olgabelitskaya/flower-color-images){target="_blank"}
 
 To execute the code on a locally run shiny web app the data shall be copied in folders "flowers" and "weapons" of the Rproject folder. From the dataset-downloads the sub folders *flower_images* and *Weapons-in-Images* are required.
 
@@ -84,8 +84,8 @@ While Sagemaker Studio Lab only supported Python, the Amazon Sagemaker solution 
 :::: column-margin
 ::: {.callout-note}
 ## Stackoverflow
-[1. my Question and my Answer](https://stackoverflow.com/questions/75988301/vgg16-different-shape-between-r-and-python-how-to-deal-with-that)\
-[2. Example Images InputLayer](https://imgur.com/a/5dOaJWf)
+[1. my Question and my Answer](https://stackoverflow.com/questions/75988301/vgg16-different-shape-between-r-and-python-how-to-deal-with-that){target="_blank"}\
+[2. Example Images InputLayer](https://imgur.com/a/5dOaJWf){target="_blank"}
 :::
 ::::
 
@@ -450,7 +450,7 @@ However, the butcher-library can be used to reduce the fitted model to essential
 :::: column-margin
 ::: {.callout-note}
 ## RDS Files
-[GoogleDrive](https://drive.google.com/drive/folders/1LQ2Ixx4rwxcAW8TQPocOXQnUKcDCvBSE?usp=sharing)
+[GoogleDrive](https://drive.google.com/drive/folders/1LQ2Ixx4rwxcAW8TQPocOXQnUKcDCvBSE?usp=sharing){target="_blank"}
 :::
 ::::
 
@@ -470,7 +470,7 @@ This part covers the deployment in a shiny app. For details on the code behind t
 :::: column-margin
 ::: {.callout-note}
 ## Shinyapps.io
-[myApp](https://thearmbreaker.shinyapps.io/clustering-with-keras/)\
+[myApp](https://thearmbreaker.shinyapps.io/clustering-with-keras/){target="_blank"}\
 [myApp: UserGuide](TecDoc_Shiny.html){target="_blank"}
 :::
 ::::
@@ -492,7 +492,7 @@ myBundle
 ```{r shinyapps-deployment}
 #| eval: false
 # install.packages('rsconnect')
-library(rsconnct)
+library(rsconnect)
 
 # rsconnect::setAccountInfo(name='thearmbreaker', token='TOKEN', secret='SECRET')
 
@@ -511,7 +511,7 @@ deployApp(
 The deployed app was recorded to save results in case of crashes. A youtube video is embedded, in case the upload to moodle has a size limit.  
 
 ::: {style="display: flex; justify-content: center;"}
-{{< video https://www.youtube.com/watch?v=Lu9IAUXZqQg&t=614s width='480' height='360' >}}
+{{< video https://youtu.be/TlOUXbdlIDg width='480' height='360' >}}
 :::
 
 In the section **Show Clusters** of the app a bar graph shows the amount of images per cluster for one of the four models. To evaluate the results (similarity of images in clusters) in a heuristic manner, four random images are displayed when a specific cluster is activated.\
@@ -535,25 +535,25 @@ With the deployed app, the unsupervised clustering algorithm can conveniently be
 :::{style="overflow-x:auto;"}
 | Cluster         | Cluster_1                        | Cluster_2                    | Cluster_3            | Cluster_4             | Cluster_5              | Cluster_6                                          | Cluster_7                               | Cluster_8                          | Cluster_9                | Cluster_10     |
 |-------|-------|-------|-------|-------|-------|-------|-------|-------|-------|-------|
-| Flowers         | Yellow                           | Dark-Red                     | Violet               | Daisy-ish             | White                  | Purple                                             | Light-Yellow                            | Rose                               | Bright-Red               | Orange         |
-| Flowers_predict | Rose / Bright-Violet             | Orange                       | Unspecific           | White/Rose            | Yellow                 | Daisy-ish, blossoms up                             | Daisy-ish, blossoms down                | Violet                             | White                    | Bright-Yellow  |
-| Weapons         | Aiming Rifles/Pistols in profile | Footage from single incident | unspecific           | unspecific            | Movie like             | Movies and landscape photos with military personal | Movie like with weapons close to camera | Military personal with weapons     | Toys, Close range images | Shooting Range |
-| Weapons_predict | Unspecific, movie like           | Toys                         | Soldiers with weapon | Military in landscape | unspecific, movie like | Shooting Range with table of weapons               | Shooting Range                          | Aiming Rifles / Pistols in profile | Not trained              | Not trained    |
+| Flowers         | Yellow                           | Vinous                     | Unspecific               | Daisies (white)            | White                  | Purple                                             | Yellow other blossoms                            | Pink                               | Bright-Red               | Orange         |
+| Flowers_predict | Pink             | Orange                       | Unspecific           | White/bright-pink            | Yellow                 | Daisy from side                            | Daisy-ish from above               | Yellow-Violet                             | White-Pink                    | Bright-Yellow other blossoms  |
+| Weapons         | Whitehouse Camera footage | Weapon, close range in profile | landscape           | Pistols from side in profile            | Shooting range            | Soldiers | Toys and Noise | Movie footage     | mil equipment in landscape | camera footage |
+| Weapons_predict | Unspecific with movie/camera footage           | unspecific                         | Soldiers with weapon | Soldiers with weapon | mil equipment in landscape | movie footage               | Unspecific with toys                          | Shooting range | Shooting range - aiming              | weapon in profile   |
 
 : Label-suggestions for Clusters
 :::
 
-Regarding both models of the flower images one can speak about success. However, the dataset description suggested 10 clusters by the labeled species. In comparision of the barplots for flowers and flowers_predict it is visible that flowers_predicts has a very high amount of pictures in Cluster_1. In flowers the images are more evenly spreaded over the clusters.
+Regarding both models of the flower images one can speak about success. However, the dataset description suggested 10 clusters by the labeled species. In comparison of the barplots for flowers and flowers_predict it is visible that flowers_predicts has a very high amount of pictures in Cluster_1. In flowers the images are more evenly spread over the clusters.
 
-For the weapon-images different amount of clusters where used. The weapons model shows more evenly spreaded amount of images per cluster. The weapons_predict shows evenly spreaded amount of images over clusters 2,3,4,6,7 and 8. But Cluster 1 and 5 are rather large and unspecific.\
-The clusters do not distinguish between pistols or rifles, but the enable the distinction of images with people aiming with a rifle, camera footage, groups of people or other scenic photographs. This can be seen as success to sort out irrelevant images for labeling.\
+For the weapon-images 10 clusters were used, but this should be reviewed more thoroughly. The weapons model shows more evenly spread amount of images per cluster. The weapons_predict shows evenly spread amount of images over clusters 2 to 5 and 7 to 10. But Cluster 1 and 6 are rather large and with a wide variety of images.\
+The clusters do not distinguish between pistols or rifles, but they enable the distinction of images with people aiming with a rifle, camera footage, groups of people or other scenic photographs. This can be seen as success to sort out irrelevant images for labeling.\
 However, in comparison to the relative clean flower dataset the weapon dataset was very indistinct. Therefore, more clusters or other feature extraction approaches might be useful in the model. Last but not least, another amount of PCA could be reviewed for both datasets.
 
 # Outlook
 
 This project could be improved or further developed. There is potential in the implementation of MLflow to track improvements in PCA, k-means or feature extraction with keras.
 
--   Using a previous outputlayer in the pre-trained Keras model could result in more distinct features for helmets, pistols, rifles, and similar items.
+-   Using a previous outputlayer in the pre-trained keras model could result in more distinct features for helmets, pistols, rifles, and similar items.
 -   Improvements of PCA or K-Means might be tracked with MLflow
 -   Uploaded images could be stored in a bucket and used for new clustering training (introduce retrain-triggers)
 -   Batch-processing for multiple images with User Upload

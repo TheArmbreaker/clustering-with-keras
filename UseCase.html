@@ -195,7 +195,7 @@ Link
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<p><a href="https://github.com/TheArmbreaker/clustering-with-keras">GitHub Repo</a></p>
+<p><a href="https://github.com/TheArmbreaker/clustering-with-keras" target="_blank">GitHub Repo</a></p>
 </div>
 </div>
 </div></div><p>To following wording is used to support easier reading and unique notation. When speaking of the flower images dataset, which was originally used by Gabo Flomo, the phrase flower data is used. For the later introduced dataset on weapons in images the phrase weapons data is used. Additionally, the resulting clusters and models are names flower model and weapon model. This is especially important as two different clustering approaches will be compared and for either flower model and weapon model there will be a prediction model. Such prediction models will be named flower prediction model and weapon prediction model.</p>
@@ -209,8 +209,8 @@ Link
 <h2 class="anchored" data-anchor-id="datasets">Datasets</h2>
 <p>The images can be found here:</p>
 <ul>
-<li>Weapons in Images on <a href="https://www.kaggle.com/datasets/jubaerad/weapons-in-images-segmented-videos">kaggle.com</a></li>
-<li>Flower Color Images on <a href="https://www.kaggle.com/datasets/olgabelitskaya/flower-color-images">kaggle.com</a></li>
+<li>Weapons in Images on <a href="https://www.kaggle.com/datasets/jubaerad/weapons-in-images-segmented-videos" target="_blank">kaggle.com</a></li>
+<li>Flower Color Images on <a href="https://www.kaggle.com/datasets/olgabelitskaya/flower-color-images" target="_blank">kaggle.com</a></li>
 </ul>
 <p>To execute the code on a locally run shiny web app the data shall be copied in folders “flowers” and “weapons” of the Rproject folder. From the dataset-downloads the sub folders <em>flower_images</em> and <em>Weapons-in-Images</em> are required.</p>
 </section>
@@ -230,8 +230,8 @@ Stackoverflow
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<p><a href="https://stackoverflow.com/questions/75988301/vgg16-different-shape-between-r-and-python-how-to-deal-with-that">1. my Question and my Answer</a><br>
-<a href="https://imgur.com/a/5dOaJWf">2. Example Images InputLayer</a></p>
+<p><a href="https://stackoverflow.com/questions/75988301/vgg16-different-shape-between-r-and-python-how-to-deal-with-that" target="_blank">1. my Question and my Answer</a><br>
+<a href="https://imgur.com/a/5dOaJWf" target="_blank">2. Example Images InputLayer</a></p>
 </div>
 </div>
 </div></div><p>The Databricks environment was registered via the community edition link. However it skyrocketed costs at AWS within one night so that the approach had to be canceled.</p>
@@ -691,7 +691,7 @@ RDS Files
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<p><a href="https://drive.google.com/drive/folders/1LQ2Ixx4rwxcAW8TQPocOXQnUKcDCvBSE?usp=sharing">GoogleDrive</a></p>
+<p><a href="https://drive.google.com/drive/folders/1LQ2Ixx4rwxcAW8TQPocOXQnUKcDCvBSE?usp=sharing" target="_blank">GoogleDrive</a></p>
 </div>
 </div>
 </div></div><div class="cell">
@@ -749,7 +749,7 @@ Shinyapps.io
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<p><a href="https://thearmbreaker.shinyapps.io/clustering-with-keras/">myApp</a><br>
+<p><a href="https://thearmbreaker.shinyapps.io/clustering-with-keras/" target="_blank">myApp</a><br>
 <a href="TecDoc_Shiny.html" target="_blank">myApp: UserGuide</a></p>
 </div>
 </div>
@@ -776,22 +776,21 @@ Shinyapps.io
  [9] "recipe_flowers.csv"                            
 [10] "recipe_flowers_2023_04_24_19_36_28_cluster.rds"
 [11] "recipe_weapons.csv"                            
-[12] "recipe_weapons_2023_05_01_00_55_10_cluster.rds"
-[13] "recipe_weapons_2023_05_01_01_15_48_cluster.csv"
-[14] "recipe_weapons_2023_05_01_01_15_48_cluster.rds"
-[15] "TecDoc_Shiny.html"                             
-[16] "TecDoc_Shiny_files"                            
-[17] "UseCase.html"                                  
-[18] "UseCase_cache"                                 
-[19] "UseCase_files"                                 
-[20] "weapons"                                       
-[21] "weapons_cluster.rds"                           
-[22] "weapons_featArray.csv"                         </code></pre>
+[12] "recipe_weapons_2023_05_01_14_45_08_cluster.csv"
+[13] "recipe_weapons_2023_05_01_14_45_08_cluster.rds"
+[14] "TecDoc_Shiny.html"                             
+[15] "TecDoc_Shiny_files"                            
+[16] "UseCase.html"                                  
+[17] "UseCase_cache"                                 
+[18] "UseCase_files"                                 
+[19] "weapons"                                       
+[20] "weapons_cluster.rds"                           
+[21] "weapons_featArray.csv"                         </code></pre>
 </div>
 </div>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb34"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="co"># install.packages('rsconnect')</span></span>
-<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(rsconnct)</span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(rsconnect)</span>
 <span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb34-4"><a href="#cb34-4" aria-hidden="true" tabindex="-1"></a><span class="co"># rsconnect::setAccountInfo(name='thearmbreaker', token='TOKEN', secret='SECRET')</span></span>
 <span id="cb34-5"><a href="#cb34-5" aria-hidden="true" tabindex="-1"></a></span>
@@ -809,7 +808,7 @@ Shinyapps.io
 <h2 class="anchored" data-anchor-id="description-of-app">Description of App</h2>
 <p>The deployed app was recorded to save results in case of crashes. A youtube video is embedded, in case the upload to moodle has a size limit.</p>
 <div style="display: flex; justify-content: center;">
-<div class="quarto-video"><iframe src="https://www.youtube.com/embed/Lu9IAUXZqQg" width="480" height="360" title="" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen=""></iframe></div>
+<div class="quarto-video"><iframe src="https://www.youtube.com/embed/TlOUXbdlIDg" width="480" height="360" title="" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen=""></iframe></div>
 </div>
 <p>In the section <strong>Show Clusters</strong> of the app a bar graph shows the amount of images per cluster for one of the four models. To evaluate the results (similarity of images in clusters) in a heuristic manner, four random images are displayed when a specific cluster is activated.<br>
 The app shows an example for naming the clusters with a text input-field. The required code is not implemented but might look like the below snippet which writes the names to an sql table.</p>
@@ -860,61 +859,61 @@ The app shows an example for naming the clusters with a text input-field. The re
 <tr class="odd">
 <td>Flowers</td>
 <td>Yellow</td>
-<td>Dark-Red</td>
-<td>Violet</td>
-<td>Daisy-ish</td>
+<td>Vinous</td>
+<td>Unspecific</td>
+<td>Daisies (white)</td>
 <td>White</td>
 <td>Purple</td>
-<td>Light-Yellow</td>
-<td>Rose</td>
+<td>Yellow other blossoms</td>
+<td>Pink</td>
 <td>Bright-Red</td>
 <td>Orange</td>
 </tr>
 <tr class="even">
 <td>Flowers_predict</td>
-<td>Rose / Bright-Violet</td>
+<td>Pink</td>
 <td>Orange</td>
 <td>Unspecific</td>
-<td>White/Rose</td>
+<td>White/bright-pink</td>
 <td>Yellow</td>
-<td>Daisy-ish, blossoms up</td>
-<td>Daisy-ish, blossoms down</td>
-<td>Violet</td>
-<td>White</td>
-<td>Bright-Yellow</td>
+<td>Daisy from side</td>
+<td>Daisy-ish from above</td>
+<td>Yellow-Violet</td>
+<td>White-Pink</td>
+<td>Bright-Yellow other blossoms</td>
 </tr>
 <tr class="odd">
 <td>Weapons</td>
-<td>Aiming Rifles/Pistols in profile</td>
-<td>Footage from single incident</td>
-<td>unspecific</td>
-<td>unspecific</td>
-<td>Movie like</td>
-<td>Movies and landscape photos with military personal</td>
-<td>Movie like with weapons close to camera</td>
-<td>Military personal with weapons</td>
-<td>Toys, Close range images</td>
-<td>Shooting Range</td>
+<td>Whitehouse Camera footage</td>
+<td>Weapon, close range in profile</td>
+<td>landscape</td>
+<td>Pistols from side in profile</td>
+<td>Shooting range</td>
+<td>Soldiers</td>
+<td>Toys and Noise</td>
+<td>Movie footage</td>
+<td>mil equipment in landscape</td>
+<td>camera footage</td>
 </tr>
 <tr class="even">
 <td>Weapons_predict</td>
-<td>Unspecific, movie like</td>
-<td>Toys</td>
+<td>Unspecific with movie/camera footage</td>
+<td>unspecific</td>
 <td>Soldiers with weapon</td>
-<td>Military in landscape</td>
-<td>unspecific, movie like</td>
-<td>Shooting Range with table of weapons</td>
-<td>Shooting Range</td>
-<td>Aiming Rifles / Pistols in profile</td>
-<td>Not trained</td>
-<td>Not trained</td>
+<td>Soldiers with weapon</td>
+<td>mil equipment in landscape</td>
+<td>movie footage</td>
+<td>Unspecific with toys</td>
+<td>Shooting range</td>
+<td>Shooting range - aiming</td>
+<td>weapon in profile</td>
 </tr>
 </tbody>
 </table>
 </div>
-<p>Regarding both models of the flower images one can speak about success. However, the dataset description suggested 10 clusters by the labeled species. In comparision of the barplots for flowers and flowers_predict it is visible that flowers_predicts has a very high amount of pictures in Cluster_1. In flowers the images are more evenly spreaded over the clusters.</p>
-<p>For the weapon-images different amount of clusters where used. The weapons model shows more evenly spreaded amount of images per cluster. The weapons_predict shows evenly spreaded amount of images over clusters 2,3,4,6,7 and 8. But Cluster 1 and 5 are rather large and unspecific.<br>
-The clusters do not distinguish between pistols or rifles, but the enable the distinction of images with people aiming with a rifle, camera footage, groups of people or other scenic photographs. This can be seen as success to sort out irrelevant images for labeling.<br>
+<p>Regarding both models of the flower images one can speak about success. However, the dataset description suggested 10 clusters by the labeled species. In comparison of the barplots for flowers and flowers_predict it is visible that flowers_predicts has a very high amount of pictures in Cluster_1. In flowers the images are more evenly spread over the clusters.</p>
+<p>For the weapon-images 10 clusters were used, but this should be reviewed more thoroughly. The weapons model shows more evenly spread amount of images per cluster. The weapons_predict shows evenly spread amount of images over clusters 2 to 5 and 7 to 10. But Cluster 1 and 6 are rather large and with a wide variety of images.<br>
+The clusters do not distinguish between pistols or rifles, but they enable the distinction of images with people aiming with a rifle, camera footage, groups of people or other scenic photographs. This can be seen as success to sort out irrelevant images for labeling.<br>
 However, in comparison to the relative clean flower dataset the weapon dataset was very indistinct. Therefore, more clusters or other feature extraction approaches might be useful in the model. Last but not least, another amount of PCA could be reviewed for both datasets.</p>
 </section>
 </section>
@@ -922,7 +921,7 @@ However, in comparison to the relative clean flower dataset the weapon dataset w
 <h1>Outlook</h1>
 <p>This project could be improved or further developed. There is potential in the implementation of MLflow to track improvements in PCA, k-means or feature extraction with keras.</p>
 <ul>
-<li>Using a previous outputlayer in the pre-trained Keras model could result in more distinct features for helmets, pistols, rifles, and similar items.</li>
+<li>Using a previous outputlayer in the pre-trained keras model could result in more distinct features for helmets, pistols, rifles, and similar items.</li>
 <li>Improvements of PCA or K-Means might be tracked with MLflow</li>
 <li>Uploaded images could be stored in a bucket and used for new clustering training (introduce retrain-triggers)</li>
 <li>Batch-processing for multiple images with User Upload</li>
