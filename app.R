@@ -31,10 +31,23 @@ myKerasModel <- keras_model(inputs=myKerasModel$input, outputs=output)
 # Define UI
 ui <- fluidPage(theme = shinytheme("united"),
                 tags$head(
-                  tags$style(
-                    HTML(".image-container { height: 300px; overflow-y: auto; display:inline-block;}")
-                  )
-                ),
+                  tags$style(HTML(
+                    ".footer {
+                    position:relative;
+                    bottom:0;
+                    font-family: Ubuntu,Tahoma,Helvetica Neue,Helvetica,Arial,sans-serif;
+                    width: 100%;
+                    text-align: center;
+                    height: 60px;
+                    background-color: #e95420;
+                    color: white;
+                    justify-content: center;
+                    }
+                    .divmargin {
+                    margin-right: 10px;
+                    display: flex;
+                    justify-content: center;
+                    }"))),
                 navbarPage(
                   # theme = "cerulean",  # <--- To use a theme, uncomment this
                   "Image Clustering",
@@ -102,9 +115,11 @@ ui <- fluidPage(theme = shinytheme("united"),
                   tabPanel("User Guide", value ="userguide",
                            br(),br(),
                            uiOutput("ref"),
-                           )
-                  
+                           ),                  
                 ), # navbarPage
+                tags$footer(tags$div(tags$p("Visit the",style = "margin-right: 13px;"),tags$a(href="https://github.com/TheArmbreaker/clustering-with-keras", tags$img(src="https://img.shields.io/badge/Github-Repository-blue"), target="_blank", alt="Github Repository"),tags$p("for more information and references.", style = "margin-left: 13px;"), class="divmargin"),
+                            tags$div(tags$p("R learning project by", style = "margin-right: 13px;"),tags$a(href="https://github.com/TheArmbreaker", tags$img(src="https://img.shields.io/badge/Github-Markus%20Armbrecht-darkgreen"), target="_blank", alt="Github Markus Armbrecht"), class="divmargin"),
+                            class = "footer"),
 ) # fluidPage
 
 
@@ -334,7 +349,7 @@ server <- function(input, output, session) {
   output$ref <- renderUI({
     getPage()
   })
-  
+
 } # server
 
 
